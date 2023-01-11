@@ -37,13 +37,11 @@ if __name__ == '__main__':
     #     filename="{epoch:02d}-{step:05d}-last",
     # )
     #
-    # scheduler_callback = pl.callbacks.LearningRateMonitor(logging_interval="epoch")
+    model_path = get_unique_file_path("trained_models", f"{model.config.name}", "pt")
+    torch.save(model, model_path)
+    print(f"Model saved to {model_path}")
 
-    trainer_kwargs = {}
-    if device.type == 'cuda':
-        trainer_kwargs['accelerator'] = 'gpu'
-        trainer_kwargs['devices'] = [max(range(torch.cuda.device_count()),
-                                         key=lambda i: torch.cuda.get_device_properties(i).total_memory)]
+    save_predictions(model, protein_dataset)
 
     trainer = Trainer(
         max_epochs=config.epochs,

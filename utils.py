@@ -1,4 +1,6 @@
 import csv
+import os
+from datetime import datetime
 
 import numpy as np
 import scipy.sparse as sp
@@ -28,3 +30,12 @@ def normalize_adjacency(A):
     A_normalized = D.dot(A)
 
     return A_normalized
+
+
+def get_unique_file_path(folder, name, ext):
+    path = os.path.join(folder, f'{name}_{datetime.now().strftime("%y-%m-%d_%H-%M-%S")}.{ext}')
+    i = 1
+    while os.path.exists(path):
+        path = os.path.join(folder, f'{name}_{datetime.now().strftime("%y-%m-%d_%H-%M-%S")}_({i}).{ext}')
+        i += 1
+    return path
