@@ -1,3 +1,4 @@
+import sys
 from abc import ABC, abstractmethod
 
 import pytorch_lightning as pl
@@ -30,8 +31,9 @@ class BaseProteinModel(ABC, pl.LightningModule):
         if params is None:
             params = self.parameters()
         optimizer = self.config.optimizer(params, **self.config.optimizer_kwargs)
-        #lr_scheduler = config.lr_scheduler(optimizer, **config.lr_scheduler_kwargs)
-        return optimizer  # [optimizer], [lr_scheduler]
+
+        lr_scheduler = self.config.lr_scheduler(optimizer, **self.config.lr_scheduler_kwargs)
+        return [optimizer], [lr_scheduler]
 
     def training_step(self, batch, batch_idx, log=True, log_prefix='train_', prog_bar=False):
         sequences, graphs, labels = batch

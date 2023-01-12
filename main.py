@@ -13,8 +13,9 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     model = GNN(
-        num_node_features=ProteinDataset.NUM_NODE_FEATURES,
         num_classes=ProteinDataset.NUM_CLASSES,
+        num_node_features=ProteinDataset.NUM_NODE_FEATURES,
+        num_edge_features=ProteinDataset.NUM_EDGE_FEATURES,
     ).to(device)
 
     # model.load_state_dict(torch.load("models/GNN+CNN_23-01-12_00-12-40.pt"))
@@ -27,21 +28,21 @@ if __name__ == '__main__':
         num_validation_samples=config.num_validation_samples,
     )
 
-    # wandb_logger = WandbLogger(project="ALTeGraD Kaggle challenge", entity="efagnou", name=config.name)
-    # wandb_logger.log_hyperparams(config)
-    #
-    # save_dir = f"checkpoints/{wandb_logger.name}-{wandb_logger.version}"
-    # val_checkpoint_callback = ModelCheckpoint(
-    #     dirpath=save_dir,
-    #     monitor="val_loss",
-    #     filename="{epoch:02d}-{step:05d}-{val_loss:.4f}",
-    # )
-    # last_checkpoint_callback = ModelCheckpoint(
-    #     dirpath=save_dir,
-    #     filename="{epoch:02d}-{step:05d}-last",
-    # )
-    #
-    # scheduler_callback = pl.callbacks.LearningRateMonitor(logging_interval="epoch")
+    wandb_logger = WandbLogger(project="ALTeGraD Kaggle challenge", entity="efagnou", name=config.name)
+    wandb_logger.log_hyperparams(config)
+
+    save_dir = f"checkpoints/{wandb_logger.name}-{wandb_logger.version}"
+    val_checkpoint_callback = ModelCheckpoint(
+        dirpath=save_dir,
+        monitor="val_loss",
+        filename="{epoch:02d}-{step:05d}-{val_loss:.4f}",
+    )
+    last_checkpoint_callback = ModelCheckpoint(
+        dirpath=save_dir,
+        filename="{epoch:02d}-{step:05d}-last",
+    )
+
+    scheduler_callback = pl.callbacks.LearningRateMonitor(logging_interval="epoch")
 
     trainer_kwargs = {}
     if device.type == 'cuda':
@@ -51,8 +52,8 @@ if __name__ == '__main__':
 
     trainer = Trainer(
         max_epochs=config.epochs,
-        # logger=wandb_logger,
-        # callbacks=[val_checkpoint_callback, last_checkpoint_callback, scheduler_callback],
+        logger=wandb_logger,
+        callbacks=[val_checkpoint_callback, last_checkpoint_callback, scheduler_callback],
         **trainer_kwargs,
     )
     trainer.fit(model, protein_dataset.train_loader, protein_dataset.val_loader)

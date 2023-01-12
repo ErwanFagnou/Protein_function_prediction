@@ -22,6 +22,7 @@ class ProteinDataset:
 
     NUM_CLASSES = 18
     NUM_NODE_FEATURES = 83  # =86-3 (removed the 3D coordinates from the features)
+    NUM_EDGE_FEATURES = 5
 
     NUM_ACIDS = 21
     amino_acids = 'ACDEFGHIKLMNPQRSTVWXY'

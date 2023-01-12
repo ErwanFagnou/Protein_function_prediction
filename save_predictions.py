@@ -15,10 +15,11 @@ def save_predictions(model: BaseProteinModel, dataset: ProteinDataset, file_dir=
     model.eval()
     label_probas = []
     for batch in tqdm(dataset.test_loader, desc='Generating predictions'):
-        sequences, *other_inputs = batch[0]
-        sequences = [s.to(model.device) for s in sequences]
-        other_inputs = [o.to(model.device) for o in other_inputs]
-        label_probas.append(model.predict_probabilities(sequences, *other_inputs).detach().cpu())
+        sequences, graphs, _ = batch
+        # print(sequences, graphs)
+        # sequences = [s.to(model.device) for s in sequences]
+        # graphs = [g.to(model.device) for g in graphs]
+        label_probas.append(model.predict_probabilities(sequences, graphs).detach().cpu())
     label_probas = torch.cat(label_probas, dim=0)
 
     if file_name is None:
