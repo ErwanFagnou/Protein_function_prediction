@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 import pytorch_lightning as pl
 import torch
 from torch import nn
+from torch_geometric.data import Batch
 
 
 class BaseProteinModel(ABC, pl.LightningModule):
@@ -19,7 +20,7 @@ class BaseProteinModel(ABC, pl.LightningModule):
         self.loss_fn = nn.CrossEntropyLoss()
 
     @abstractmethod
-    def forward(self, sequences, adj, node_features, edge_features, node_idx, edge_idx):
+    def forward(self, sequences, graphs: Batch):
         raise NotImplementedError
 
     def prepare_inputs(self, sequences, adj, node_features, edge_features, node_idx, edge_idx):
@@ -32,16 +33,17 @@ class BaseProteinModel(ABC, pl.LightningModule):
         #lr_scheduler = config.lr_scheduler(optimizer, **config.lr_scheduler_kwargs)
         return optimizer  # [optimizer], [lr_scheduler]
 
-    def training_step(self, batch, batch_idx, log_prefix='train_', prog_bar=False):
-        inputs, labels = batch
+    def training_step(self, batch, batch_idx, log=True, log_prefix='train_', prog_bar=False):
+        sequences, graphs, labels = batch
 
-        logits = self(*inputs)
+        logits = self(sequences, graphs)
         loss = self.loss_fn(logits, labels)
 
-        acc = (logits.argmax(dim=-1) == labels).float().mean()
-        self.log(log_prefix + 'acc', acc, on_epoch=True, batch_size=labels.shape[0], prog_bar=prog_bar)
+        if log:
+            acc = (logits.argmax(dim=-1) == labels).float().mean()
+            self.log(log_prefix + 'acc', acc, on_epoch=True, batch_size=labels.shape[0], prog_bar=prog_bar)
 
-        self.log(log_prefix + 'loss', loss, on_epoch=True, batch_size=labels.shape[0], prog_bar=prog_bar)
+            self.log(log_prefix + 'loss', loss, on_epoch=True, batch_size=labels.shape[0], prog_bar=prog_bar)
         return loss
 
     def validation_step(self, batch, batch_idx, dataloader_idx=0):
@@ -49,11 +51,10 @@ class BaseProteinModel(ABC, pl.LightningModule):
         return loss
 
     def test_step(self, batch, batch_idx):
-        loss = self.training_step(batch, batch_idx, log_prefix='test_', prog_bar=True)
+        loss = self.training_step(batch, batch_idx, log=False)
         return loss
 
-    def predict_step(self, batch, batch_idx: int, dataloader_idx: int = None):
-        inputs, labels = batch
+    def predict_probabilities(self, *inputs):
         logits = self(*inputs)
         return torch.softmax(logits, dim=-1)
 

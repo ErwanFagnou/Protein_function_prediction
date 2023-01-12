@@ -8,6 +8,8 @@ import torch
 from torch.utils.data import DataLoader
 import pickle
 import bz2
+from torch_geometric.data import Data, Batch
+from torch_geometric.utils import to_undirected
 
 import utils
 
@@ -19,7 +21,7 @@ class ProteinDataset:
     cache_file = data_dir + 'dataset.pkl.bz2'
 
     NUM_CLASSES = 18
-    NUM_NODE_FEATURES = 86
+    NUM_NODE_FEATURES = 83  # =86-3 (removed the 3D coordinates from the features)
 
     NUM_ACIDS = 21
     amino_acids = 'ACDEFGHIKLMNPQRSTVWXY'
@@ -37,9 +39,7 @@ class ProteinDataset:
                 self.protein_labels = data['protein_labels']
                 self.has_label = data['has_label']
                 self.sequences = data['sequences']
-                self.adjacency_matrices = data['adjacency_matrices']
-                self.node_features = data['node_features']
-                self.edge_features = data['edge_features']
+                self.graphs = data['graphs']
         else:
             print('Loading dataset from raw files. This may take a few minutes.')
             # Read labels
@@ -81,28 +81,33 @@ class ProteinDataset:
             # Read adjacency matrix
             print('\t[5/6] Reading adjacency matrix')
             edges = np.loadtxt(self.data_dir + "edgelist.txt", dtype=np.int64, delimiter=",")
-            A = sp.csr_matrix((np.ones(edges.shape[0]), (edges[:, 0], edges[:, 1])),
-                              shape=(total_num_nodes, total_num_nodes))
-            A += A.T
-            A = (A > 0)  # fix
 
             # Separate each protein graph
             print('\t[6/6] Separating graphs')
-            self.adjacency_matrices = []
-            self.node_features = []
-            self.edge_features = []
+            self.graphs = []
             idx_n = 0
             idx_m = 0
             graph_indicator = np.loadtxt(self.data_dir + "graph_indicator.txt", dtype=np.int64)
             _, graph_sizes = np.unique(graph_indicator, return_counts=True)
             for i in range(len(graph_sizes)):
-                self.adjacency_matrices.append(A[idx_n:idx_n + graph_sizes[i], idx_n:idx_n + graph_sizes[i]])
+                n = graph_sizes[i]
+                m = np.sum(np.logical_and(idx_n <= edges[0], edges[0] < idx_n + n))
+                x_features = torch.from_numpy(node_attr[idx_n:idx_n + n]).float()
+                graph_edge_index = torch.from_numpy(edges[idx_m:idx_m + m]).t().contiguous() - idx_n
+                graph_edge_attr = torch.from_numpy(edge_attr[idx_m:idx_m + m]).float()
 
-                self.node_features.append(node_attr[idx_n:idx_n + graph_sizes[i]])
-                self.edge_features.append(edge_attr[idx_m:idx_m + self.adjacency_matrices[i].nnz])
+                graph_edge_index, graph_edge_attr = to_undirected(graph_edge_index, graph_edge_attr, num_nodes=n, reduce='mean')
+                graph = Data(
+                    x=x_features[:, 3:],  # remove 3D coordinates
+                    edge_index=graph_edge_index,
+                    edge_attr=graph_edge_attr,
+                    pos=x_features[:, :3],
+                )
+                graph.validate()
+                self.graphs.append(graph)
 
-                idx_n += graph_sizes[i]
-                idx_m += self.adjacency_matrices[i].nnz
+                idx_n += n
+                idx_m += m
 
             if self.cache_dataset:
                 print('(Saving dataset to load faster next time)')
@@ -111,22 +116,19 @@ class ProteinDataset:
                     'protein_labels': self.protein_labels,
                     'has_label': self.has_label,
                     'sequences': self.sequences,
-                    'adjacency_matrices': self.adjacency_matrices,
-                    'node_features': self.node_features,
-                    'edge_features': self.edge_features
+                    'graphs': self.graphs,
                 }
                 with bz2.BZ2File(self.cache_file, 'wb') as f:
                     pickle.dump(data, f)
 
-        if normalize_adj:
-            print('Normalizing adjacency matrices...')
-            self.adjacency_matrices = [utils.normalize_adjacency(A) for A in self.adjacency_matrices]
+        # if normalize_adj:
+        #     print('Normalizing adjacency matrices...')
+        #     self.adjacency_matrices = [utils.normalize_adjacency(A) for A in self.adjacency_matrices]
 
-        inputs = (self.sequences, self.node_features, self.edge_features, self.adjacency_matrices)
-        labels = self.protein_labels
-        all_samples = list(zip(zip(*inputs), labels))  # list of ((input1, input2, ...), labels)
+        self.sequences = [torch.from_numpy(seq) for seq in self.sequences]
 
         # Split into train, test and validation
+        all_samples = list(zip(self.sequences, self.graphs, self.protein_labels))
         train_data = [x for i, x in enumerate(all_samples) if self.has_label[i]]
         test_data = [x for i, x in enumerate(all_samples) if not self.has_label[i]]
         self.test_protein_names = self.protein_names[~self.has_label]
@@ -151,34 +153,8 @@ class ProteinDataset:
 
 
 def batch_collate_fn(batch):
-    seq_batch = []
-    adj_batch = []
-    node_features_batch = []
-    edge_features_batch = []
-    node_idx_batch = []
-    edge_idx_batch = []
-    labels_batch = []
+    sequences, graphs, labels = zip(*batch)
+    graphs = Batch.from_data_list(graphs)
+    labels = torch.tensor(labels, dtype=torch.long)
 
-    # Create tensors
-    for i, ((seq, node_features, edge_features, adj), labels) in enumerate(batch):
-        n = adj.shape[0]
-        seq_batch.append(torch.LongTensor(seq))
-        adj_batch.append(adj)
-        node_features_batch.append(node_features)
-        edge_features_batch.append(edge_features)
-        node_idx_batch.append(torch.full((n,), i, dtype=torch.long))
-        edge_idx_batch.append(torch.full((adj.nnz,), i, dtype=torch.long))
-        labels_batch.append(labels)
-
-    adj_batch = sp.block_diag(adj_batch)
-    node_features_batch = np.vstack(node_features_batch)
-    edge_features_batch = np.vstack(edge_features_batch)
-
-    adj_batch = utils.sparse_mx_to_torch_sparse_tensor(adj_batch)
-    node_features_batch = torch.FloatTensor(node_features_batch)
-    edge_features_batch = torch.FloatTensor(edge_features_batch)
-    node_idx_batch = torch.cat(node_idx_batch)
-    edge_idx_batch = torch.cat(edge_idx_batch)
-    labels_batch = torch.LongTensor(labels_batch)
-
-    return (seq_batch, adj_batch, node_features_batch, edge_features_batch, node_idx_batch, edge_idx_batch), labels_batch
+    return sequences, graphs, labels

@@ -6,18 +6,22 @@ from pytorch_lightning.loggers import WandbLogger
 
 from dataset import ProteinDataset
 from models.GNN import GNN
+from save_predictions import save_predictions
+from utils import get_unique_file_path
 
 if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    print("Building model...")
     model = GNN(
-        num_node_features=ProteinDataset.NUM_NODE_FEATURES - 3,  # removed the 3 coordinates from the
+        num_node_features=ProteinDataset.NUM_NODE_FEATURES,
         num_classes=ProteinDataset.NUM_CLASSES,
     ).to(device)
+
+    # model.load_state_dict(torch.load("models/GNN+CNN_23-01-12_00-12-40.pt"))
+    # print(model)
+
     config = model.config
 
-    print("Building dataset...")
     protein_dataset = ProteinDataset(
         batch_size=config.batch_size,
         num_validation_samples=config.num_validation_samples,
@@ -37,11 +41,13 @@ if __name__ == '__main__':
     #     filename="{epoch:02d}-{step:05d}-last",
     # )
     #
-    model_path = get_unique_file_path("trained_models", f"{model.config.name}", "pt")
-    torch.save(model, model_path)
-    print(f"Model saved to {model_path}")
+    # scheduler_callback = pl.callbacks.LearningRateMonitor(logging_interval="epoch")
 
-    save_predictions(model, protein_dataset)
+    trainer_kwargs = {}
+    if device.type == 'cuda':
+        trainer_kwargs['accelerator'] = 'gpu'
+        trainer_kwargs['devices'] = [max(range(torch.cuda.device_count()),
+                                         key=lambda i: torch.cuda.get_device_properties(i).total_memory)]
 
     trainer = Trainer(
         max_epochs=config.epochs,
@@ -51,4 +57,8 @@ if __name__ == '__main__':
     )
     trainer.fit(model, protein_dataset.train_loader, protein_dataset.val_loader)
 
-    trainer.test(model, protein_dataset.test_loader)
+    model_path = get_unique_file_path("trained_models", f"{model.config.name}", "pt")
+    torch.save(model.state_dict(), model_path)
+    print(f"Model saved to {model_path}")
+
+    save_predictions(model, protein_dataset)
