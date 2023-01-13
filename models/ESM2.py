@@ -24,7 +24,7 @@ class ESM2(BaseProteinModel):
             dropout=0.2,
 
             epochs=200,
-            batch_size=64,
+            batch_size=32,
             num_validation_samples=100,
             optimizer=torch.optim.Adam,
             optimizer_kwargs=dict(lr=2e-3, weight_decay=1e-3),
