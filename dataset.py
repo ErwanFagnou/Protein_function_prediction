@@ -28,6 +28,8 @@ class ProteinDataset:
     amino_acids = 'ACDEFGHIKLMNPQRSTVWXY'
     acid_to_index = {aa: i for i, aa in enumerate(amino_acids)}
 
+    MAX_SEQ_LEN = 989 + 100
+
     def __init__(self, batch_size, num_validation_samples=0, normalize_adj=True):
         self.batch_size = batch_size
         self.validation_samples = num_validation_samples
