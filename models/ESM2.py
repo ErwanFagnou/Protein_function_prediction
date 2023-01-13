@@ -14,31 +14,34 @@ class ESM2(BaseProteinModel):
         super(ESM2, self).__init__()
 
         self.config = ConfigDict(
-            name='EMS2_small',
-            hidden_dim=32,
-            mask_rate=0.5,
+            name='EMS2_large',
+            hidden_dim=64,
+            num_layers=3,
+            num_heads=16,
+
+            mask_rate=0.2,
             mask_error_rate=0.1,
             dropout=0.2,
 
             epochs=200,
-            batch_size=16,
+            batch_size=64,
             num_validation_samples=100,
             optimizer=torch.optim.Adam,
-            optimizer_kwargs=dict(lr=2e-3),
+            optimizer_kwargs=dict(lr=2e-3, weight_decay=1e-3),
             # lr_scheduler=torch.optim.lr_scheduler.CosineAnnealingLR,
             # lr_scheduler_kwargs=dict(T_max=200, eta_min=1e-5),
             lr_scheduler=torch.optim.lr_scheduler.ExponentialLR,
             lr_scheduler_kwargs=dict(gamma=pow(1e-2, 1/200)),
         )
-        self.output_dim = self.config.hidden_dim
+        self.output_dim = self.config.hidden_dim * self.config.num_layers
 
         d = self.config.hidden_dim
 
         self.esm2_config = EsmConfig(
             hidden_size=d,
             intermediate_size=2*d,
-            num_hidden_layers=2,
-            num_attention_heads=4,
+            num_hidden_layers=self.config.num_layers,
+            num_attention_heads=self.config.num_heads,
             max_position_embeddings=ProteinDataset.MAX_SEQ_LEN,
             position_embedding_type="absolute",  # TODO: try relative
 
@@ -81,11 +84,16 @@ class ESM2(BaseProteinModel):
         if random_mask:
             rand = torch.rand_like(x)
             mask_normal = rand < self.config.mask_rate
-            mask_error = rand > 1 - self.config.mask_error_rate
+            mask_error = rand < self.config.mask_error_rate * self.config.mask_rate  # included in mask_normal
             x = torch.where(mask_normal, self.mask_vector, x)  # fill with mask vector
             x = torch.where(mask_error, x[:, torch.randperm(x.shape[1])], x)  # fill with other sequence elements
 
-        self.result = self.esm2_model(inputs_embeds=x, labels=y, attention_mask=attn_mask, encoder_attention_mask=attn_mask)
+        self.result = self.esm2_model(inputs_embeds=x, labels=y, attention_mask=attn_mask,
+                                      encoder_attention_mask=attn_mask, output_hidden_states=return_embeddings)
+
+        if return_embeddings:
+            x = torch.cat(self.result.hidden_states[-self.config.num_layers:], dim=-1)
+            return x
 
         return self.result.loss
 
