@@ -10,6 +10,7 @@ import pickle
 import bz2
 from torch_geometric.data import Data, Batch
 from torch_geometric.utils import to_undirected
+from tqdm import tqdm
 
 import utils
 
@@ -30,7 +31,7 @@ class ProteinDataset:
 
     MAX_SEQ_LEN = 989 + 100
 
-    def __init__(self, batch_size, num_validation_samples=0, normalize_adj=True):
+    def __init__(self, batch_size, num_validation_samples=0, pretrained_seq_encoder=None):
         self.batch_size = batch_size
         self.validation_samples = num_validation_samples
 
@@ -130,8 +131,26 @@ class ProteinDataset:
 
         self.sequences = [torch.from_numpy(seq).long() for seq in self.sequences]
 
-        # Split into train, test and validation
         all_samples = list(zip(self.sequences, self.graphs, self.protein_labels))
+
+        # Replace node features with sequence embeddings
+        if pretrained_seq_encoder is not None:
+            pretrained_seq_encoder.eval()
+            full_loader = DataLoader(all_samples, batch_size=pretrained_seq_encoder.config.batch_size, shuffle=False, collate_fn=batch_collate_fn)
+
+            idx = 0
+            with torch.no_grad():
+                for batch in tqdm(full_loader, desc='Generating sequence embeddings from pretrained model'):
+                    sequences, graphs, _ = batch
+                    sequences = [s.to(pretrained_seq_encoder.device) for s in sequences]
+                    graphs = graphs.to(pretrained_seq_encoder.device)
+                    x = pretrained_seq_encoder(sequences, graphs).detach().cpu()
+                    x = [x[i, :sequences[i].shape[0]] for i in range(x.shape[0])]  # remove padding
+                    for i in range(len(x)):
+                        all_samples[idx][1].x = x[i]  # replace node features with sequence embeddings
+                        idx += 1
+
+        # Split into train, test and validation
         train_data = [x for i, x in enumerate(all_samples) if self.has_label[i]]
         test_data = [x for i, x in enumerate(all_samples) if not self.has_label[i]]
         self.test_protein_names = self.protein_names[~self.has_label]
