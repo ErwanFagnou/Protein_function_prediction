@@ -17,8 +17,8 @@ def save_predictions(model: BaseProteinModel, dataset: ProteinDataset, file_dir=
     for batch in tqdm(dataset.test_loader, desc='Generating predictions'):
         sequences, graphs, _ = batch
         # print(sequences, graphs)
-        # sequences = [s.to(model.device) for s in sequences]
-        # graphs = [g.to(model.device) for g in graphs]
+        sequences = [s.to(model.device) for s in sequences]
+        graphs = graphs.to(model.device)
         label_probas.append(model.predict_probabilities(sequences, graphs).detach().cpu())
     label_probas = torch.cat(label_probas, dim=0)
 
