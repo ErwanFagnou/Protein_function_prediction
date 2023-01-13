@@ -2,3 +2,5 @@
 dataset
 submissions
 lightning_logs
+wandb
+checkpoints

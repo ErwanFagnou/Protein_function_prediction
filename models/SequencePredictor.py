@@ -29,6 +29,7 @@ class SequencePredictor(BaseProteinModel):
             lr_scheduler=torch.optim.lr_scheduler.ExponentialLR,
             lr_scheduler_kwargs=dict(gamma=pow(1e-2, 1/200)),
         )
+        self.output_dim = 2 * self.config.hidden_dim
 
         d = self.config.hidden_dim
 
@@ -49,7 +50,7 @@ class SequencePredictor(BaseProteinModel):
 
         self.mask_token = nn.Parameter(torch.randn(1, num_node_features))
 
-    def forward(self, sequences, graphs, return_acc=False):
+    def forward(self, sequences, graphs, return_embeddings=True, return_acc=False):
         node_features = graphs.x
 
         # Pad sequences
@@ -61,30 +62,27 @@ class SequencePredictor(BaseProteinModel):
             idx_n += seq_acid_ids.shape[0]
 
             x.append(torch.cat([seq, torch.zeros(max_len - len(seq), seq.shape[1], device=seq.device)], dim=0))
-            y.append(torch.cat([seq_acid_ids, -torch.ones(max_len - len(seq_acid_ids), device=seq.device)], dim=0))
+            if not return_embeddings:
+                y.append(torch.cat([seq_acid_ids, -torch.ones(max_len - len(seq_acid_ids), device=seq.device)], dim=0))
         x = torch.stack(x, dim=0)
-        y = torch.stack(y, dim=0).long()
+        if not return_embeddings:
+            x = x[:, :-1]
+            y = torch.stack(y, dim=0).long()
+            y = y[:, 1:]
 
-        x = x[:, :-1]
-        y = y[:, 1:]
 
         # # Mask some sequence vectors with a special token
         # masked = torch.rand(x.shape[0], x.shape[1], device=x.device) < self.config.mask_rate
         # x = torch.where(masked[:, :, None], self.mask_token, x)
 
-        rnn_in = x
-        x, _ = self.rnn1(rnn_in)
+        x1, _ = self.rnn1(x)
         # seq = self.dropout(x)
-        # x = x + self.res_projection1(rnn_in)  # Residual connection
 
-        rnn_in = x
-        x, _ = self.rnn2(rnn_in)
+        x, _ = self.rnn2(x1)
         # x = self.dropout(x)
-        # x = x + self.res_projection2(rnn_in)  # Residual connection
 
-        # x = self.input_projection(x)
-        # x = self.attn1(x, x, x)[0] + x
-        # x = self.attn2(x, x, x)[0] + x
+        if return_embeddings:
+            return torch.cat([x1, x], dim=-1)
 
         # x, _ = nn.utils.rnn.pad_packed_sequence(x, batch_first=True)
 
@@ -104,7 +102,7 @@ class SequencePredictor(BaseProteinModel):
         sequences, graphs, labels = batch
 
         if log:
-            loss, acc = self(sequences, graphs, return_acc=True)
+            loss, acc = self(sequences, graphs, return_embeddings=False, return_acc=True)
 
             self.log(log_prefix + 'acc', acc, on_epoch=True, batch_size=labels.shape[0], prog_bar=prog_bar)
             self.log(log_prefix + 'loss', loss, on_epoch=True, batch_size=labels.shape[0], prog_bar=prog_bar)

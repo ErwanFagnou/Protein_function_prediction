@@ -20,7 +20,7 @@ class GNN(BaseProteinModel):
             hidden_dim=64,
             embedding_dim=10,
             dropout=0.2,
-            num_layers=3,
+            num_layers=2,
             lr_scheduler=torch.optim.lr_scheduler.CosineAnnealingLR,
             lr_scheduler_kwargs=dict(T_max=200, eta_min=1e-5),
         )
@@ -35,7 +35,7 @@ class GNN(BaseProteinModel):
         # self.gnn1 = GATConv(num_node_features, d, heads=5, **gnn_kwargs)
         # self.gnns = nn.ModuleList([GATConv(d, d, heads=5, **gnn_kwargs) for _ in range(self.config.num_layers-1)])
 
-        self.gnn = AttentiveFP(self.config.embedding_dim, d, d, edge_dim=num_edge_features, num_layers=2, num_timesteps=5, dropout=0.2)
+        self.gnn = AttentiveFP(self.config.embedding_dim, d, d, edge_dim=num_edge_features, num_layers=self.config.num_layers, num_timesteps=5, dropout=0.2)
 
         # self.gnn = GENConv(self.config.embedding_dim, d, edge_dim=num_edge_features, aggr='softmax', num_layers=10,
         #                    learn_p=True, learn_t=True, learn_msg_scale=True)
