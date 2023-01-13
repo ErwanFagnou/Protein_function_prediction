@@ -15,7 +15,7 @@ def train(model, device):
         num_validation_samples=config.num_validation_samples,
     )
 
-    wandb_logger = WandbLogger(project="ALTeGraD Kaggle challenge", entity="efagnou", name=config.name)
+    wandb_logger = WandbLogger(project="ALTeGraD Kaggle challenge", entity="efagnou", name=config.name, group=model.experiment_name)
     wandb_logger.log_hyperparams(config)
 
     save_dir = f"checkpoints/{wandb_logger.name}-{wandb_logger.version}"

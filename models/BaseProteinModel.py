@@ -9,6 +9,9 @@ from torch_geometric.data import Batch
 
 class BaseProteinModel(ABC, pl.LightningModule):
 
+    CREATE_SUBMISSION = True
+    experiment_name = 'protein_classification'
+
     def __init__(self):
         super(BaseProteinModel, self).__init__()
 

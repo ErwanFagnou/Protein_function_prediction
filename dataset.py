@@ -126,7 +126,7 @@ class ProteinDataset:
         #     print('Normalizing adjacency matrices...')
         #     self.adjacency_matrices = [utils.normalize_adjacency(A) for A in self.adjacency_matrices]
 
-        self.sequences = [torch.from_numpy(seq) for seq in self.sequences]
+        self.sequences = [torch.from_numpy(seq).long() for seq in self.sequences]
 
         # Split into train, test and validation
         all_samples = list(zip(self.sequences, self.graphs, self.protein_labels))
