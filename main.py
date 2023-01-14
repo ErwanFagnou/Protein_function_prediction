@@ -26,22 +26,22 @@ def get_pretrained_encoder():
     #     num_node_features=ProteinDataset.NUM_NODE_FEATURES,
     #     num_classes=ProteinDataset.NUM_CLASSES,
     # )
-    # return ESM2(
-    #     num_node_features=ProteinDataset.NUM_NODE_FEATURES,
-    #     num_classes=ProteinDataset.NUM_CLASSES,
-    # )
-
-
-def get_model(num_node_features):
-    # return GNN(
-    #     num_node_features=num_node_features,
-    #     num_edge_features=ProteinDataset.NUM_EDGE_FEATURES,
-    #     num_classes=ProteinDataset.NUM_CLASSES,
-    # )
     return ESM2(
         num_node_features=ProteinDataset.NUM_NODE_FEATURES,
         num_classes=ProteinDataset.NUM_CLASSES,
     )
+
+
+def get_model(num_node_features):
+    return GNN(
+        num_node_features=num_node_features,
+        num_edge_features=ProteinDataset.NUM_EDGE_FEATURES,
+        num_classes=ProteinDataset.NUM_CLASSES,
+    )
+    # return ESM2(
+    #     num_node_features=ProteinDataset.NUM_NODE_FEATURES,
+    #     num_classes=ProteinDataset.NUM_CLASSES,
+    # )
 
 
 if __name__ == '__main__':
@@ -50,6 +50,11 @@ if __name__ == '__main__':
     pretrained_seq_encoder = get_pretrained_encoder()
     # pretrained_seq_encoder.load_state_dict(torch.load('trained_models/LSTM_256_23-01-13_17-47-26.pt'))
     # pretrained_seq_encoder.load_state_dict(torch.load('trained_models/EMS2_small_23-01-13_21-18-41.pt'))
+    # pretrained_seq_encoder.load_state_dict(torch.load('trained_models/EMS2_large_23-01-14_00-45-00.pt'))
+    pretrained_seq_encoder.load_state_dict(torch.load('trained_models/EMS2_large_23-01-14_03-35-00.pt'))
+
+    # pretrained_seq_encoder.load_state_dict(torch.load('checkpoints/ALTeGraD Kaggle challenge-7761zfzr/epoch=179-step=54000-val_loss=0.0000.ckpt', map_location=device)['state_dict'])
+    # torch.save(pretrained_seq_encoder.state_dict(), 'trained_models/EMS2_large_23-01-14_03-35-00.pt')
 
     num_node_features = ProteinDataset.NUM_NODE_FEATURES if pretrained_seq_encoder is None else pretrained_seq_encoder.output_dim
     model = get_model(num_node_features)

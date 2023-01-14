@@ -31,7 +31,7 @@ class ESM2(BaseProteinModel):
             # lr_scheduler=torch.optim.lr_scheduler.CosineAnnealingLR,
             # lr_scheduler_kwargs=dict(T_max=200, eta_min=1e-5),
             lr_scheduler=torch.optim.lr_scheduler.ExponentialLR,
-            lr_scheduler_kwargs=dict(gamma=pow(1e-2, 1/200)),
+            lr_scheduler_kwargs=dict(gamma=pow(1e-4, 1/200)),
         )
         self.output_dim = self.config.hidden_dim * self.config.num_layers
 
