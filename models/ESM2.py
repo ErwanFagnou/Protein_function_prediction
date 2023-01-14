@@ -27,7 +27,7 @@ class ESM2(BaseProteinModel):
             batch_size=16,
             num_validation_samples=100,
             optimizer=torch.optim.Adam,
-            optimizer_kwargs=dict(lr=2e-3, weight_decay=1e-2),
+            optimizer_kwargs=dict(lr=1e-3, weight_decay=1e-2),
             # lr_scheduler=torch.optim.lr_scheduler.CosineAnnealingLR,
             # lr_scheduler_kwargs=dict(T_max=200, eta_min=1e-5),
             lr_scheduler=torch.optim.lr_scheduler.ExponentialLR,
