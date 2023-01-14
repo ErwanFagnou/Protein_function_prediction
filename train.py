@@ -50,7 +50,7 @@ def train(model, device, pretrained_seq_encoder=None, do_train=True):
 
     trainer = Trainer(
         max_epochs=config.epochs,
-        gradient_clip_val=1.0,
+        #gradient_clip_val=100.0,
         logger=wandb_logger,
         callbacks=[val_checkpoint_callback, last_checkpoint_callback, scheduler_callback],
         **trainer_kwargs,
