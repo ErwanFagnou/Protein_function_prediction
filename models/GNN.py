@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 from torch_geometric.nn import GCNConv, GATConv, aggr, GENConv, AttentiveFP
+from torch_geometric import transforms as T
 
 from models.BaseProteinModel import BaseProteinModel, ConfigDict
 
@@ -11,36 +12,43 @@ class GNN(BaseProteinModel):
         super(GNN, self).__init__()
 
         self.config = ConfigDict(
-            name='AttentiveFP+ESM2_large2',
+            name='GCN',
             epochs=200,
             batch_size=32,
             num_validation_samples=100,  # there are 4888 training samples, so 100 validation samples is ok
             optimizer=torch.optim.Adam,
-            optimizer_kwargs=dict(lr=2e-3),
+            optimizer_kwargs=dict(lr=1e-3),
             hidden_dim=64,
-            embedding_dim=20,
+            embedding_dim=10,
             dropout=0.2,
-            num_layers=5,
-            lr_scheduler=torch.optim.lr_scheduler.CosineAnnealingLR,
-            lr_scheduler_kwargs=dict(T_max=200, eta_min=1e-5),
+            num_layers=1,
+            # lr_scheduler=torch.optim.lr_scheduler.CosineAnnealingLR,
+            # lr_scheduler_kwargs=dict(T_max=200, eta_min=1e-5),
+            lr_scheduler=torch.optim.lr_scheduler.ExponentialLR,
+            lr_scheduler_kwargs=dict(gamma=pow(1e-2, 1/200)),
         )
 
         d = self.config.hidden_dim
 
-        self.node_proj = nn.Linear(num_node_features, self.config.embedding_dim)
+        # self.node_proj = nn.Linear(num_node_features, self.config.embedding_dim)
+        self.node_proj = nn.LazyLinear(self.config.embedding_dim)
         self.seq_embed = nn.Embedding(21, self.config.embedding_dim)
 
         # Graph encoder  # TODO: cached=True + use edges
+        self.gnn1 = GCNConv(self.config.embedding_dim, d)
+        self.gnns = nn.ModuleList([GCNConv(d, d) for _ in range(self.config.num_layers-1)])
+
         # gnn_kwargs = dict(edge_dim=num_edge_features, dropout=0.2, add_self_loops=True, concat=False)
-        # self.gnn1 = GATConv(num_node_features, d, heads=5, **gnn_kwargs)
-        # self.gnns = nn.ModuleList([GATConv(d, d, heads=5, **gnn_kwargs) for _ in range(self.config.num_layers-1)])
+        # self.gnn1 = GATConv(self.config.embedding_dim, d, heads=2, **gnn_kwargs)
+        # self.gnns = nn.ModuleList([GATConv(d, d, heads=2, **gnn_kwargs) for _ in range(self.config.num_layers-1)])
 
-        self.gnn = AttentiveFP(self.config.embedding_dim, d, d, edge_dim=num_edge_features, num_layers=self.config.num_layers, num_timesteps=5, dropout=self.config.dropout)
+        # self.gnn = AttentiveFP(self.config.embedding_dim, d, d, edge_dim=num_edge_features, num_layers=self.config.num_layers, num_timesteps=5, dropout=self.config.dropout)
 
-        # self.gnn = GENConv(self.config.embedding_dim, d, edge_dim=num_edge_features, aggr='softmax', num_layers=10,
+        # self.gnn = GENConv(self.config.embedding_dim, d, edge_dim=num_edge_features, aggr='softmax', num_layers=2,
         #                    learn_p=True, learn_t=True, learn_msg_scale=True)
 
         self.aggregator = aggr.MeanAggregation()  # TODO: choose
+        # self.aggregator = aggr.SumAggregation()
         # self.aggregator = aggr.GraphMultisetTransformer(in_channels=d, out_channels=d, hidden_channels=d, num_heads=8)
         # self.aggregator = aggr.LSTMAggregation(in_channels=d, out_channels=d)
 
@@ -52,9 +60,18 @@ class GNN(BaseProteinModel):
         self.dropout = nn.Dropout(self.config.dropout)
 
         # self.seq_attn = nn.MultiheadAttention(embed_dim=self.config.embedding_dim, num_heads=5, dropout=0.2, batch_first=True)
-        self.seq_rnn = nn.LSTM(self.config.embedding_dim, self.config.embedding_dim // 2, batch_first=True, bidirectional=True)
+        # self.seq_rnn = nn.LSTM(self.config.embedding_dim, self.config.embedding_dim // 2, batch_first=True, bidirectional=True)
 
     def forward(self, sequences, graphs):
+        # print(graphs.x, graphs.x.shape)
+        # print(graphs.edge_attr)
+        # print(graphs.edge_index)
+        #
+        # transforms = T.Compose([
+        #     T.VirtualNode(),
+        # ])
+        # graphs = transforms(graphs)
+
         x = graphs.x
         x = self.node_proj(x)
 
@@ -81,18 +98,19 @@ class GNN(BaseProteinModel):
         # print(x.shape, graphs.x.shape)
 
         # Graph encoder
-        # for gnn in [self.gnn1, *self.gnns]:
-        #     x = gnn(x, graphs.edge_index, graphs.edge_attr)
-        #     x = self.relu(x)
-        #     x = self.dropout(x)
+        for gnn in [self.gnn1, *self.gnns]:
+            x = gnn(x, graphs.edge_index)
+            x = self.relu(x)
+            x = self.dropout(x)
 
         # x = self.gnn(x, graphs.edge_index, graphs.edge_attr)
         # x = self.dropout(x)
 
-        x = self.gnn(x, graphs.edge_index, graphs.edge_attr, graphs.batch)  # AttentiveFP
+        # x = self.gnn(x, graphs.edge_index, graphs.edge_attr, graphs.batch)  # AttentiveFP
 
-        # x = self.aggregator(x, graphs.batch)
-        # x = self.aggregator(x, graphs.batch, edge_index=graphs.edge_index)
+        x = self.aggregator(x, graphs.batch)
+        # x = self.aggregator(x, graphs.batch, edge_index=graphs.edge_index)  # GraphMultisetTransformer
+
         graph_emb = self.bn(x)
         x = graph_emb
 
