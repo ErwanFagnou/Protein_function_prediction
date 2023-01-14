@@ -15,7 +15,7 @@ class ESM2(BaseProteinModel):
 
         self.config = ConfigDict(
             name='EMS2_large',
-            hidden_dim=64,
+            hidden_dim=128,
             num_layers=3,
             num_heads=16,
 
@@ -24,10 +24,10 @@ class ESM2(BaseProteinModel):
             dropout=0.2,
 
             epochs=200,
-            batch_size=32,
+            batch_size=16,
             num_validation_samples=100,
             optimizer=torch.optim.Adam,
-            optimizer_kwargs=dict(lr=2e-3, weight_decay=1e-3),
+            optimizer_kwargs=dict(lr=2e-3, weight_decay=1e-2),
             # lr_scheduler=torch.optim.lr_scheduler.CosineAnnealingLR,
             # lr_scheduler_kwargs=dict(T_max=200, eta_min=1e-5),
             lr_scheduler=torch.optim.lr_scheduler.ExponentialLR,
