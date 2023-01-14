@@ -5,6 +5,7 @@ import random
 import numpy as np
 import scipy.sparse as sp
 import torch
+from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 import pickle
 import bz2
@@ -155,9 +156,17 @@ class ProteinDataset:
         test_data = [x for i, x in enumerate(all_samples) if not self.has_label[i]]
         self.test_protein_names = self.protein_names[~self.has_label]
         if num_validation_samples > 0:
-            random.Random(0).shuffle(train_data)
-            val_data = train_data[:num_validation_samples]
-            train_data = train_data[num_validation_samples:]
+            # random.Random(0).shuffle(train_data)
+            # val_data = train_data[:num_validation_samples]
+            # train_data = train_data[num_validation_samples:]
+
+            # stratified sampling
+            train_data = np.array(train_data)
+            train_labels = train_data[:, 2]
+            train_inputs = train_data[:, :2]
+            train_inputs, val_inputs, train_labels, val_labels = train_test_split(train_inputs, train_labels, test_size=num_validation_samples, stratify=train_labels)
+            train_data = list(zip(train_inputs[:, 0], train_inputs[:, 1], train_labels))
+            val_data = list(zip(val_inputs[:, 0], val_inputs[:, 1], val_labels))
 
         # Make dataloaders
         self.train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, collate_fn=batch_collate_fn)
