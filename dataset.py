@@ -83,7 +83,7 @@ class ProteinDataset:
             edge_attr = np.loadtxt(self.data_dir + "edge_attributes.txt", delimiter=",")
 
             # Read adjacency matrix
-            print('\t[5/6] Reading adjacency matrix')
+            print('\t[5/6] Reading edge list')
             edges = np.loadtxt(self.data_dir + "edgelist.txt", dtype=np.int64, delimiter=",")
 
             # Separate each protein graph
@@ -93,9 +93,9 @@ class ProteinDataset:
             idx_m = 0
             graph_indicator = np.loadtxt(self.data_dir + "graph_indicator.txt", dtype=np.int64)
             _, graph_sizes = np.unique(graph_indicator, return_counts=True)
-            for i in range(len(graph_sizes)):
+            for i in tqdm(range(len(graph_sizes)), desc='Separating graphs', leave=False):
                 n = graph_sizes[i]
-                m = np.sum(np.logical_and(idx_n <= edges[0], edges[0] < idx_n + n))
+                m = np.sum(np.logical_and(idx_n <= edges[:, 0], edges[:, 0] < idx_n + n))
                 x_features = torch.from_numpy(node_attr[idx_n:idx_n + n]).float()
                 graph_edge_index = torch.from_numpy(edges[idx_m:idx_m + m]).t().contiguous() - idx_n
                 graph_edge_attr = torch.from_numpy(edge_attr[idx_m:idx_m + m]).float()
