@@ -1,0 +1,7 @@
+numpy
+torch
+transformers
+tqdm
+torch-geometric
+pytorch-lightning
+wandb

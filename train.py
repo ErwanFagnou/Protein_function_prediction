@@ -19,12 +19,14 @@ def train(model, device, pretrained_seq_encoder=None, do_train=True):
         batch_size=config.batch_size,
         num_validation_samples=config.num_validation_samples,
         pretrained_seq_encoder=pretrained_seq_encoder,
+        transforms=model.transforms if hasattr(model, 'transforms') else None,
     )
 
     if not do_train:
         return protein_dataset
 
-    wandb_logger = WandbLogger(project="ALTeGraD Kaggle challenge", entity="efagnou", name=config.name, group=model.experiment_name)
+    wandb_logger = WandbLogger(project="ALTeGraD Kaggle challenge", entity="efagnou", name=config.name, group=model.experiment_name,
+                               tags=['valid'])
     wandb_logger.log_hyperparams(config)
     if pretrained_seq_encoder is not None:
         wandb_logger.log_hyperparams(dict(pretrained_seq_encoder_name=pretrained_seq_encoder.config.name))

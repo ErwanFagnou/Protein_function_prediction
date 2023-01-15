@@ -3,25 +3,39 @@ from torch import nn
 from torch_geometric.nn import GCNConv, GATConv, aggr, GENConv, AttentiveFP
 from torch_geometric import transforms as T
 
+from features import *
 from models.BaseProteinModel import BaseProteinModel, ConfigDict
 
 
 class GNN(BaseProteinModel):
 
+    transforms = T.Compose([
+        TorsionFeatures(),
+        # AnglesFeatures(),
+        PositionInSequence(),
+        CenterDistance(),
+        # MahalanobisCenterDistance(),
+
+        T.VirtualNode(),
+        T.LocalDegreeProfile(),
+        # T.GDC(),
+        T.AddLaplacianEigenvectorPE(k=3, attr_name=None, is_undirected=True),
+    ])
+
     def __init__(self, num_node_features, num_edge_features, num_classes):
         super(GNN, self).__init__()
 
         self.config = ConfigDict(
-            name='GCN',
+            name='GCN_64D_2L+manyFeats',
             epochs=200,
             batch_size=32,
-            num_validation_samples=100,  # there are 4888 training samples, so 100 validation samples is ok
+            num_validation_samples=500,  # there are 4888 training samples, so 100 validation samples is ok
             optimizer=torch.optim.Adam,
             optimizer_kwargs=dict(lr=1e-3),
             hidden_dim=64,
-            embedding_dim=10,
+            embedding_dim=64,
             dropout=0.2,
-            num_layers=1,
+            num_layers=2,
             # lr_scheduler=torch.optim.lr_scheduler.CosineAnnealingLR,
             # lr_scheduler_kwargs=dict(T_max=200, eta_min=1e-5),
             lr_scheduler=torch.optim.lr_scheduler.ExponentialLR,
@@ -42,17 +56,18 @@ class GNN(BaseProteinModel):
         # self.gnn1 = GATConv(self.config.embedding_dim, d, heads=2, **gnn_kwargs)
         # self.gnns = nn.ModuleList([GATConv(d, d, heads=2, **gnn_kwargs) for _ in range(self.config.num_layers-1)])
 
-        # self.gnn = AttentiveFP(self.config.embedding_dim, d, d, edge_dim=num_edge_features, num_layers=self.config.num_layers, num_timesteps=5, dropout=self.config.dropout)
+        # self.gnn = AttentiveFP(self.config.embedding_dim, d, d, edge_dim=num_edge_features, num_layers=self.config.num_layers, num_timesteps=2, dropout=self.config.dropout)
 
-        # self.gnn = GENConv(self.config.embedding_dim, d, edge_dim=num_edge_features, aggr='softmax', num_layers=2,
+        # self.gnn = GENConv(self.config.embedding_dim, d, edge_dim=num_edge_features, aggr='softmax', num_layers=self.config.num_layers,
         #                    learn_p=True, learn_t=True, learn_msg_scale=True)
 
         self.aggregator = aggr.MeanAggregation()  # TODO: choose
         # self.aggregator = aggr.SumAggregation()
+        # self.aggregator = aggr.SoftmaxAggregation(learn=True)
         # self.aggregator = aggr.GraphMultisetTransformer(in_channels=d, out_channels=d, hidden_channels=d, num_heads=8)
         # self.aggregator = aggr.LSTMAggregation(in_channels=d, out_channels=d)
 
-        self.bn = nn.BatchNorm1d(d)
+        # self.bn = nn.BatchNorm1d(d)
         self.fc3 = nn.LazyLinear(d)
         self.fc4 = nn.Linear(d, num_classes)
 
@@ -66,11 +81,7 @@ class GNN(BaseProteinModel):
         # print(graphs.x, graphs.x.shape)
         # print(graphs.edge_attr)
         # print(graphs.edge_index)
-        #
-        # transforms = T.Compose([
-        #     T.VirtualNode(),
-        # ])
-        # graphs = transforms(graphs)
+
 
         x = graphs.x
         x = self.node_proj(x)
@@ -97,6 +108,8 @@ class GNN(BaseProteinModel):
         # x = torch.cat(new_x, dim=0)
         # print(x.shape, graphs.x.shape)
 
+        # x = self.dropout(x)
+
         # Graph encoder
         for gnn in [self.gnn1, *self.gnns]:
             x = gnn(x, graphs.edge_index)
@@ -107,12 +120,13 @@ class GNN(BaseProteinModel):
         # x = self.dropout(x)
 
         # x = self.gnn(x, graphs.edge_index, graphs.edge_attr, graphs.batch)  # AttentiveFP
+        # x = x / torch.tensor([s.shape[0] for s in sequences], device=x.device).unsqueeze(1)  # take mean instead of sum
 
         x = self.aggregator(x, graphs.batch)
         # x = self.aggregator(x, graphs.batch, edge_index=graphs.edge_index)  # GraphMultisetTransformer
 
-        graph_emb = self.bn(x)
-        x = graph_emb
+        # graph_emb = self.bn(x)
+        # x = graph_emb
 
         # frequencies = []
         # for seq in sequences:

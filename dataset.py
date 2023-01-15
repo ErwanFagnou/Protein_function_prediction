@@ -32,7 +32,7 @@ class ProteinDataset:
 
     MAX_SEQ_LEN = 989 + 100
 
-    def __init__(self, batch_size, num_validation_samples=0, pretrained_seq_encoder=None):
+    def __init__(self, batch_size, num_validation_samples=0, pretrained_seq_encoder=None, transforms=None):
         self.batch_size = batch_size
         self.validation_samples = num_validation_samples
 
@@ -126,10 +126,6 @@ class ProteinDataset:
                 with bz2.BZ2File(self.cache_file, 'wb') as f:
                     pickle.dump(data, f)
 
-        # if normalize_adj:
-        #     print('Normalizing adjacency matrices...')
-        #     self.adjacency_matrices = [utils.normalize_adjacency(A) for A in self.adjacency_matrices]
-
         self.sequences = [torch.from_numpy(seq).long() for seq in self.sequences]
 
         all_samples = list(zip(self.sequences, self.graphs, self.protein_labels))
@@ -151,6 +147,12 @@ class ProteinDataset:
                         all_samples[idx][1].x = x[i]  # replace node features with sequence embeddings
                         idx += 1
 
+        # Apply node feature transformations
+        if transforms is not None:
+            for i in range(len(all_samples)):
+                g = transforms(all_samples[i][1])
+                all_samples[i] = (all_samples[i][0], g, all_samples[i][2])
+
         # Split into train, test and validation
         train_data = [x for i, x in enumerate(all_samples) if self.has_label[i]]
         test_data = [x for i, x in enumerate(all_samples) if not self.has_label[i]]
@@ -161,10 +163,10 @@ class ProteinDataset:
             # train_data = train_data[num_validation_samples:]
 
             # stratified sampling
-            train_data = np.array(train_data)
+            train_data = np.array(train_data, dtype=object)
             train_labels = train_data[:, 2]
             train_inputs = train_data[:, :2]
-            train_inputs, val_inputs, train_labels, val_labels = train_test_split(train_inputs, train_labels, test_size=num_validation_samples, stratify=train_labels)
+            train_inputs, val_inputs, train_labels, val_labels = train_test_split(train_inputs, train_labels, test_size=num_validation_samples, stratify=train_labels, random_state=0)
             train_data = list(zip(train_inputs[:, 0], train_inputs[:, 1], train_labels))
             val_data = list(zip(val_inputs[:, 0], val_inputs[:, 1], val_labels))
 
