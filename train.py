@@ -20,6 +20,7 @@ def train(model, device, pretrained_seq_encoder=None, do_train=True):
         num_validation_samples=config.num_validation_samples,
         pretrained_seq_encoder=pretrained_seq_encoder,
         transforms=model.transforms if hasattr(model, 'transforms') else None,
+        pca_dim=model.PCA_DIM,
     )
 
     if not do_train:
@@ -52,6 +53,7 @@ def train(model, device, pretrained_seq_encoder=None, do_train=True):
 
     trainer = Trainer(
         max_epochs=config.epochs,
+        accumulate_grad_batches=config.accumulate_grad_batches if hasattr(config, 'accumulate_grad_batches') else None,
         #gradient_clip_val=100.0,
         logger=wandb_logger,
         callbacks=[val_checkpoint_callback, last_checkpoint_callback, scheduler_callback],

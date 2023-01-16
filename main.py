@@ -6,6 +6,7 @@ from pytorch_lightning.loggers import WandbLogger
 
 from dataset import ProteinDataset
 from models.ESM2 import ESM2
+from models.ESM2_classification import ESM2Classification
 from models.GNN import GNN
 from models.SequencePredictor import SequencePredictor
 from save_predictions import save_predictions
@@ -22,10 +23,10 @@ TRAIN_MODEL = True
 
 def get_pretrained_encoder():
     ...
-    return SequencePredictor(
-        num_node_features=ProteinDataset.NUM_NODE_FEATURES,
-        num_classes=ProteinDataset.NUM_CLASSES,
-    )
+    # return SequencePredictor(
+    #     num_node_features=ProteinDataset.NUM_NODE_FEATURES,
+    #     num_classes=ProteinDataset.NUM_CLASSES,
+    # )
     # return ESM2(
     #     num_node_features=ProteinDataset.NUM_NODE_FEATURES,
     #     num_classes=ProteinDataset.NUM_CLASSES,
@@ -33,22 +34,26 @@ def get_pretrained_encoder():
 
 
 def get_model(num_node_features):
-    return GNN(
-        num_node_features=num_node_features,
-        num_edge_features=ProteinDataset.NUM_EDGE_FEATURES,
-        num_classes=ProteinDataset.NUM_CLASSES,
-    )
+    # return GNN(
+    #     num_node_features=num_node_features,
+    #     num_edge_features=ProteinDataset.NUM_EDGE_FEATURES,
+    #     num_classes=ProteinDataset.NUM_CLASSES,
+    # )
     # return ESM2(
     #     num_node_features=ProteinDataset.NUM_NODE_FEATURES,
     #     num_classes=ProteinDataset.NUM_CLASSES,
     # )
+    return ESM2Classification(
+        num_node_features=ProteinDataset.NUM_NODE_FEATURES,
+        num_classes=ProteinDataset.NUM_CLASSES,
+    )
 
 
 if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     pretrained_seq_encoder = get_pretrained_encoder()
-    pretrained_seq_encoder.load_state_dict(torch.load('trained_models/LSTM_256_23-01-13_17-47-26.pt'))
+    # pretrained_seq_encoder.load_state_dict(torch.load('trained_models/LSTM_256_23-01-13_17-47-26.pt'))
     # pretrained_seq_encoder.load_state_dict(torch.load('trained_models/EMS2_small_23-01-13_21-18-41.pt'))
     # pretrained_seq_encoder.load_state_dict(torch.load('trained_models/EMS2_large_23-01-14_00-45-00.pt'))
     # pretrained_seq_encoder.load_state_dict(torch.load('trained_models/EMS2_large_23-01-14_03-35-00.pt'))
