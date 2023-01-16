@@ -6,15 +6,15 @@ from dataset import ProteinDataset
 from models.BaseProteinModel import BaseProteinModel, ConfigDict
 
 
-class ESM2(BaseProteinModel):
+class ESM2Custom(BaseProteinModel):
     CREATE_SUBMISSION = False
     experiment_name = 'masked_sequence_prediction'
 
     def __init__(self, num_node_features, num_classes):
-        super(ESM2, self).__init__()
+        super(ESM2Custom, self).__init__()
 
         self.config = ConfigDict(
-            name='EMS2_large',
+            name='EMS2_custom',
             hidden_dim=128,
             num_layers=3,
             num_heads=16,

@@ -7,7 +7,7 @@ from pytorch_lightning.loggers import WandbLogger
 from dataset import ProteinDataset
 
 
-def train(model, device, pretrained_seq_encoder=None, do_train=True):
+def train(model, device, pretrained_seq_encoder=None, do_train=True, save_pretrained=False, save_pretrained_path=None):
     config = model.config
 
     model = model.to(device)
@@ -21,6 +21,8 @@ def train(model, device, pretrained_seq_encoder=None, do_train=True):
         pretrained_seq_encoder=pretrained_seq_encoder,
         transforms=model.transforms if hasattr(model, 'transforms') else None,
         pca_dim=model.PCA_DIM,
+        save_pretrained=save_pretrained,
+        save_pretrained_path=save_pretrained_path,
     )
 
     if not do_train:
