@@ -11,6 +11,7 @@ class BaseProteinModel(ABC, pl.LightningModule):
 
     CREATE_SUBMISSION = True
     experiment_name = 'protein_classification'
+    PCA_DIM = -1  # no PCA
 
     def __init__(self):
         super(BaseProteinModel, self).__init__()

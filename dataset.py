@@ -32,7 +32,7 @@ class ProteinDataset:
 
     MAX_SEQ_LEN = 989 + 100
 
-    def __init__(self, batch_size, num_validation_samples=0, pretrained_seq_encoder=None, transforms=None):
+    def __init__(self, batch_size, num_validation_samples=0, pretrained_seq_encoder=None, transforms=None, pca_dim=-1):
         self.batch_size = batch_size
         self.validation_samples = num_validation_samples
 
@@ -152,6 +152,19 @@ class ProteinDataset:
             for i in range(len(all_samples)):
                 g = transforms(all_samples[i][1])
                 all_samples[i] = (all_samples[i][0], g, all_samples[i][2])
+
+        # Reduce dimension with PCA
+        if pca_dim is not None and pca_dim > 0:
+            from sklearn.decomposition import PCA
+            pca = PCA(n_components=pca_dim)
+            x = torch.cat([g.x for g in self.graphs], dim=0)
+            x = pca.fit_transform(x)
+            idx = 0
+            for i in range(len(self.graphs)):
+                n = self.graphs[i].x.shape[0]
+                self.graphs[i].x = torch.from_numpy(x[idx:idx + n]).float()
+                idx += n
+
 
         # Split into train, test and validation
         train_data = [x for i, x in enumerate(all_samples) if self.has_label[i]]

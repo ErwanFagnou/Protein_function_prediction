@@ -90,13 +90,3 @@ class PositionInSequence(BaseTransform):
         t = torch.linspace(0, 1, data.num_nodes)
         data.x = torch.cat([data.x, t.unsqueeze(1)], dim=1)
         return data
-
-
-class PCATransform:
-    def __init__(self, n_components=3):
-        self.n_components = n_components
-
-    def __call__(self, node_features):
-        from sklearn.decomposition import PCA
-        pca = PCA(n_components=self.n_components)
-        return torch.from_numpy(pca.fit_transform(node_features.numpy()))

@@ -9,6 +9,8 @@ from models.BaseProteinModel import BaseProteinModel, ConfigDict
 
 class GNN(BaseProteinModel):
 
+    # PCA_DIM = 64  # comment or -1 for no PCA
+
     transforms = T.Compose([
         TorsionFeatures(),
         # AnglesFeatures(),
@@ -26,20 +28,20 @@ class GNN(BaseProteinModel):
         super(GNN, self).__init__()
 
         self.config = ConfigDict(
-            name='GCN_64D_2L+manyFeats',
-            epochs=200,
-            batch_size=32,
+            name='LSTM+GCN_32D_3L+manyFeats',
+            epochs=400,
+            batch_size=64,
             num_validation_samples=500,  # there are 4888 training samples, so 100 validation samples is ok
             optimizer=torch.optim.Adam,
-            optimizer_kwargs=dict(lr=1e-3),
-            hidden_dim=64,
-            embedding_dim=64,
-            dropout=0.2,
+            optimizer_kwargs=dict(lr=1e-3, weight_decay=1e-4),
+            hidden_dim=32,
+            embedding_dim=32,
+            dropout=0.3,
             num_layers=2,
             # lr_scheduler=torch.optim.lr_scheduler.CosineAnnealingLR,
             # lr_scheduler_kwargs=dict(T_max=200, eta_min=1e-5),
             lr_scheduler=torch.optim.lr_scheduler.ExponentialLR,
-            lr_scheduler_kwargs=dict(gamma=pow(1e-2, 1/200)),
+            lr_scheduler_kwargs=dict(gamma=pow(1e-2, 1/400)),
         )
 
         d = self.config.hidden_dim
