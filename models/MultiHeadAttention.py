@@ -1,5 +1,5 @@
 import torch
-from torch import nn, MultiheadAttention
+from torch import nn
 
 from dataset import ProteinDataset
 from models.BaseProteinModel import BaseProteinModel, ConfigDict
@@ -46,7 +46,7 @@ class MultiHeadAttention(BaseProteinModel):
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(self.config.dropout)
 
-        self.attention = MultiheadAttention(embed_dim=d, num_heads=self.config.num_heads, dropout=self.config.dropout, batch_first=True)
+        self.attention = nn.MultiheadAttention(embed_dim=d, num_heads=self.config.num_heads, dropout=self.config.dropout, batch_first=True)
 
     def forward(self, sequences, graphs, return_embeddings=True, random_mask=False):
 
