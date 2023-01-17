@@ -9,7 +9,7 @@ class MultiHeadAttention(BaseProteinModel):
     CREATE_SUBMISSION = False
     experiment_name = 'masked_sequence_prediction'
 
-    def __init__(self, num_node_features, num_classes):
+    def __init__(self, num_node_features, num_edge_features, num_classes):
         super(MultiHeadAttention, self).__init__()
 
         self.config = ConfigDict(
