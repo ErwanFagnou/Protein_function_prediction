@@ -39,11 +39,11 @@ def get_pretrained_encoder():
 
 def get_model(num_node_features):
     ...
-    #return GNN(
-    #    num_node_features=num_node_features,
-    #    num_edge_features=ProteinDataset.NUM_EDGE_FEATURES,
-    #    num_classes=ProteinDataset.NUM_CLASSES,
-    #)
+    return GNN(
+        num_node_features=num_node_features,
+        num_edge_features=ProteinDataset.NUM_EDGE_FEATURES,
+        num_classes=ProteinDataset.NUM_CLASSES,
+    )
     # return ESM2Custom(
     #     num_node_features=ProteinDataset.NUM_NODE_FEATURES,
     #     num_classes=ProteinDataset.NUM_CLASSES,
@@ -52,11 +52,11 @@ def get_model(num_node_features):
     #     num_node_features=ProteinDataset.NUM_NODE_FEATURES,
     #     num_classes=ProteinDataset.NUM_CLASSES,
     # )
-    return MultiHeadAttention(
-        num_node_features=num_node_features,
-        num_edge_features=ProteinDataset.NUM_EDGE_FEATURES,
-        num_classes=ProteinDataset.NUM_CLASSES,
-    )
+    #return MultiHeadAttention(
+    #    num_node_features=num_node_features,
+    #    num_edge_features=ProteinDataset.NUM_EDGE_FEATURES,
+    #    num_classes=ProteinDataset.NUM_CLASSES,
+    #)
 
 
 if __name__ == '__main__':
