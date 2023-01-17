@@ -26,6 +26,15 @@ class BaseProteinModel(ABC, pl.LightningModule):
 
     @abstractmethod
     def forward(self, sequences, graphs: Batch):
+        """
+        :param sequences: A list of protein sequences of integers from 0 to 20, with different lengths.
+        :param graphs: A Batch object from torch_geometric.data.Batch. It contains:
+            - x: (num_nodes, num_node_features)
+            - edge_index: (2, num_edges)
+            - edge_attr: (num_edges, num_edge_features)
+            - batch: (num_nodes, ) with the batch index of each node
+        :return: A tensor of shape (batch_size, num_classes)
+        """
         raise NotImplementedError
 
     def prepare_inputs(self, sequences, adj, node_features, edge_features, node_idx, edge_idx):

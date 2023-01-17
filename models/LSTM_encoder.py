@@ -6,12 +6,12 @@ from dataset import ProteinDataset
 from models.BaseProteinModel import BaseProteinModel, ConfigDict
 
 
-class SequencePredictor(BaseProteinModel):
+class LSTMEncoder(BaseProteinModel):
     CREATE_SUBMISSION = False
     experiment_name = 'sequence_prediction'
 
     def __init__(self, num_node_features, num_classes):
-        super(SequencePredictor, self).__init__()
+        super(LSTMEncoder, self).__init__()
 
         self.config = ConfigDict(
             name='LSTM_256',

@@ -32,7 +32,7 @@ class ProteinDataset:
 
     MAX_SEQ_LEN = 989 + 100
 
-    def __init__(self, batch_size, num_validation_samples=0, pretrained_seq_encoder=None, transforms=None, pca_dim=-1, save_pretrained=False, save_pretrained_path=None):
+    def __init__(self, batch_size, num_validation_samples=0, pretrained_seq_encoder=None, transforms=None, pca_dim=-1):
         self.batch_size = batch_size
         self.validation_samples = num_validation_samples
 
@@ -147,12 +147,6 @@ class ProteinDataset:
                         all_samples[idx][1].x = x[i]  # replace node features with sequence embeddings
                         idx += 1
 
-            if save_pretrained:
-                print('(Saving pretrained embeddings to load faster next time)')
-                data = {'node_embeddings': [s[1].x for s in all_samples]}
-                with bz2.BZ2File(save_pretrained_path, 'wb') as f:
-                    pickle.dump(data, f)
-
         # Apply node feature transformations
         if transforms is not None:
             for i in range(len(all_samples)):
@@ -170,7 +164,6 @@ class ProteinDataset:
                 n = self.graphs[i].x.shape[0]
                 self.graphs[i].x = torch.from_numpy(x[idx:idx + n]).float()
                 idx += n
-
 
         # Split into train, test and validation
         train_data = [x for i, x in enumerate(all_samples) if self.has_label[i]]

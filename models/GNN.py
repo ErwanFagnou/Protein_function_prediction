@@ -11,32 +11,33 @@ class GNN(BaseProteinModel):
 
     # PCA_DIM = 64  # comment or -1 for no PCA
 
-    transforms = T.Compose([
-        TorsionFeatures(),
-        # AnglesFeatures(),
-        PositionInSequence(),
-        CenterDistance(),
-        # MahalanobisCenterDistance(),
-
-        T.VirtualNode(),
-        T.LocalDegreeProfile(),
-        # T.GDC(),
-        T.AddLaplacianEigenvectorPE(k=3, attr_name=None, is_undirected=True),
-    ])
+    # Add node features to the graph
+    # transforms = T.Compose([
+    #     TorsionFeatures(),
+    #     # AnglesFeatures(),
+    #     PositionInSequence(),
+    #     CenterDistance(),
+    #     # MahalanobisCenterDistance(),
+    #
+    #     T.VirtualNode(),
+    #     T.LocalDegreeProfile(),
+    #     # T.GDC(),
+    #     T.AddLaplacianEigenvectorPE(k=3, attr_name=None, is_undirected=True),
+    # ])
 
     def __init__(self, num_node_features, num_edge_features, num_classes):
         super(GNN, self).__init__()
 
         self.config = ConfigDict(
-            name='LSTM+GCN_32D_3L+manyFeats',
+            name='ESM2+GNN',
             epochs=400,
             batch_size=64,
-            num_validation_samples=500,  # there are 4888 training samples, so 100 validation samples is ok
+            num_validation_samples=500,  # there are 4888 training samples, so 500 validation samples is 10%
             optimizer=torch.optim.Adam,
-            optimizer_kwargs=dict(lr=1e-3, weight_decay=1e-4),
+            optimizer_kwargs=dict(lr=1e-3),  # , weight_decay=1e-5),
             hidden_dim=32,
             embedding_dim=32,
-            dropout=0.3,
+            dropout=0.2,
             num_layers=2,
             # lr_scheduler=torch.optim.lr_scheduler.CosineAnnealingLR,
             # lr_scheduler_kwargs=dict(T_max=200, eta_min=1e-5),
@@ -48,9 +49,8 @@ class GNN(BaseProteinModel):
 
         # self.node_proj = nn.Linear(num_node_features, self.config.embedding_dim)
         self.node_proj = nn.LazyLinear(self.config.embedding_dim)
-        self.seq_embed = nn.Embedding(21, self.config.embedding_dim)
 
-        # Graph encoder  # TODO: cached=True + use edges
+        # Graph neural network
         self.gnn1 = GCNConv(self.config.embedding_dim, d)
         self.gnns = nn.ModuleList([GCNConv(d, d) for _ in range(self.config.num_layers-1)])
 
@@ -63,94 +63,54 @@ class GNN(BaseProteinModel):
         # self.gnn = GENConv(self.config.embedding_dim, d, edge_dim=num_edge_features, aggr='softmax', num_layers=self.config.num_layers,
         #                    learn_p=True, learn_t=True, learn_msg_scale=True)
 
+        # Aggregator
         self.aggregator = aggr.MeanAggregation()  # TODO: choose
         # self.aggregator = aggr.SumAggregation()
         # self.aggregator = aggr.SoftmaxAggregation(learn=True)
         # self.aggregator = aggr.GraphMultisetTransformer(in_channels=d, out_channels=d, hidden_channels=d, num_heads=8)
         # self.aggregator = aggr.LSTMAggregation(in_channels=d, out_channels=d)
 
-        # self.bn = nn.BatchNorm1d(d)
-        self.fc3 = nn.LazyLinear(d)
-        self.fc4 = nn.Linear(d, num_classes)
+        self.fc1 = nn.LazyLinear(d)
+        self.fc2 = nn.Linear(d, num_classes)
 
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(self.config.dropout)
 
-        # self.seq_attn = nn.MultiheadAttention(embed_dim=self.config.embedding_dim, num_heads=5, dropout=0.2, batch_first=True)
-        # self.seq_rnn = nn.LSTM(self.config.embedding_dim, self.config.embedding_dim // 2, batch_first=True, bidirectional=True)
-
     def forward(self, sequences, graphs):
-        # print(graphs.x, graphs.x.shape)
-        # print(graphs.edge_attr)
-        # print(graphs.edge_index)
+        """
+        :param sequences: A list of protein sequences of integers from 0 to 20, with different lengths.
+        :param graphs: A Batch object from torch_geometric.data.Batch. It contains:
+            - x: (num_nodes, num_node_features)
+            - edge_index: (2, num_edges)
+            - edge_attr: (num_edges, num_edge_features)
+            - batch: (num_nodes, ) with the batch index of each node
+        """
 
-
+        # Reduce input dimensionality
         x = graphs.x
         x = self.node_proj(x)
 
-        # idx_n = 0
-        # x = []
-        # max_len = max([len(s) for s in sequences])
-        # for seq_acid_ids in sequences:
-        #     seq = graphs.x[idx_n:idx_n+len(seq_acid_ids)]
-        #     seq = self.node_proj(seq)
-        #     idx_n += len(seq_acid_ids)
-        #
-        #     x.append(torch.cat([seq, torch.zeros(max_len - len(seq), seq.shape[1], device=seq.device)], dim=0))
-        # x = torch.stack(x, dim=0)
-        # x, _ = self.seq_rnn(x)
-        # x = torch.cat([x[i, :len(s)] for i, s in enumerate(sequences)], dim=0)
+        # x = self.dropout(x)  # Maybe some dropout here?
 
-        # new_x = []
-        # for seq in sequences:
-        #     seq = self.seq_embed(seq)
-        #     # seq, _ = self.seq_attn(seq, seq, seq)
-        #     seq, _ = self.seq_rnn(seq)
-        #     new_x.append(seq)
-        # x = torch.cat(new_x, dim=0)
-        # print(x.shape, graphs.x.shape)
-
-        # x = self.dropout(x)
-
-        # Graph encoder
-        for gnn in [self.gnn1, *self.gnns]:
+        # Apply graph neural network
+        for gnn in [self.gnn1, *self.gnns]:  # for GCNConv or GATConv
             x = gnn(x, graphs.edge_index)
             x = self.relu(x)
             x = self.dropout(x)
 
-        # x = self.gnn(x, graphs.edge_index, graphs.edge_attr)
-        # x = self.dropout(x)
+        # x = self.gnn(x, graphs.edge_index, graphs.edge_attr)  # for GENConv
 
-        # x = self.gnn(x, graphs.edge_index, graphs.edge_attr, graphs.batch)  # AttentiveFP
-        # x = x / torch.tensor([s.shape[0] for s in sequences], device=x.device).unsqueeze(1)  # take mean instead of sum
+        # x = self.gnn(x, graphs.edge_index, graphs.edge_attr, graphs.batch)  # for AttentiveFP -> no aggregation needed
+        # x = x / torch.tensor([s.shape[0] for s in sequences], device=x.device).unsqueeze(1)  # taking mean instead of sum (better)
 
+        # Aggregate node embeddings from graph (not for AttentiveFP)
         x = self.aggregator(x, graphs.batch)
-        # x = self.aggregator(x, graphs.batch, edge_index=graphs.edge_index)  # GraphMultisetTransformer
+        # x = self.aggregator(x, graphs.batch, edge_index=graphs.edge_index)  # for GraphMultisetTransformer
 
-        # graph_emb = self.bn(x)
-        # x = graph_emb
-
-        # frequencies = []
-        # for seq in sequences:
-        #     freq = torch.bincount(seq, minlength=21).float()
-        #     freq = freq * torch.log(seq.shape[0] / (freq + 1))
-        #     # freq = freq / seq.shape[0]
-        #     frequencies.append(freq)
-        # frequencies = torch.stack(frequencies)
-        # # x = torch.cat([x, frequencies], dim=1)
-        # x = frequencies
-
-        # seq_embeds = []
-        # for seq in sequences:
-        #     seq = self.seq_embed(seq).unsqueeze(0)
-        #     seq_embeds.append(self.seq_attn(seq, seq, seq)[0])
-        # seq_embeds = torch.cat(seq_embeds, dim=0)
-        # # x = torch.cat([x, seq_embeds], dim=1)
-        # x = seq_embeds
-
-        # mlp to produce output
-        x = self.relu(self.fc3(x))
+        # MLP to produce output
+        x = self.fc1(x)
+        x = self.relu(x)
         x = self.dropout(x)
-        out = self.fc4(x)
+        out = self.fc2(x)
 
         return out
