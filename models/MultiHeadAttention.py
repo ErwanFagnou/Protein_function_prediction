@@ -56,7 +56,8 @@ class MultiHeadAttention(BaseProteinModel):
         #batch_size, seq_len, d = sequences.shape
 
         #just apply multihead attention to the sequences
-        x, _ = self.attention(sequences, sequences, sequences)
+        x = graphs.x
+        x, _ = self.attention(x, x, x)
 
         #MLP to produce output
         x = self.fc1(x)
