@@ -37,7 +37,7 @@ class GNN(BaseProteinModel):
             optimizer_kwargs=dict(lr=1e-3),  # , weight_decay=1e-5),
             hidden_dim=32,
             embedding_dim=32,
-            dropout=0.2,
+            dropout=0.5,
             num_layers=2,
             # lr_scheduler=torch.optim.lr_scheduler.CosineAnnealingLR,
             # lr_scheduler_kwargs=dict(T_max=200, eta_min=1e-5),
