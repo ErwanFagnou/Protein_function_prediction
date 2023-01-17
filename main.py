@@ -10,6 +10,7 @@ from models.ESM2_classification import ESM2Classification
 from models.ESM2_pretrained import ESM2Pretrained
 from models.GNN import GNN
 from models.LSTM_encoder import LSTMEncoder
+from models.MultiHeadAttention import MultiHeadAttention
 from save_predictions import save_predictions
 from train import train
 from utils import get_unique_file_path
@@ -38,11 +39,11 @@ def get_pretrained_encoder():
 
 def get_model(num_node_features):
     ...
-    return GNN(
-        num_node_features=num_node_features,
-        num_edge_features=ProteinDataset.NUM_EDGE_FEATURES,
-        num_classes=ProteinDataset.NUM_CLASSES,
-    )
+    #return GNN(
+    #    num_node_features=num_node_features,
+    #    num_edge_features=ProteinDataset.NUM_EDGE_FEATURES,
+    #    num_classes=ProteinDataset.NUM_CLASSES,
+    #)
     # return ESM2Custom(
     #     num_node_features=ProteinDataset.NUM_NODE_FEATURES,
     #     num_classes=ProteinDataset.NUM_CLASSES,
@@ -51,6 +52,11 @@ def get_model(num_node_features):
     #     num_node_features=ProteinDataset.NUM_NODE_FEATURES,
     #     num_classes=ProteinDataset.NUM_CLASSES,
     # )
+    return MultiHeadAttention(
+        num_node_features=num_node_features,
+        num_edge_features=ProteinDataset.NUM_EDGE_FEATURES,
+        num_classes=ProteinDataset.NUM_CLASSES,
+    )
 
 
 if __name__ == '__main__':
