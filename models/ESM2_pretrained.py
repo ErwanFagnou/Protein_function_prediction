@@ -59,5 +59,5 @@ class ESM2Pretrained(BaseProteinModel):
         # Get embeddings
         self.result = self.esm2_model(input_ids=x, attention_mask=attn_mask, output_hidden_states=True)
 
-        x = torch.cat(self.result.hidden_states[1, -self.config.num_layers+1:], dim=-1)
+        x = torch.cat(self.result.hidden_states[-self.config.num_layers+1:], dim=-1)[:, 1:]
         return x
