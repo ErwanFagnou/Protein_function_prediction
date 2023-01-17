@@ -14,7 +14,7 @@ class MultiHeadAttention(BaseProteinModel):
 
         self.config = ConfigDict(
             name='multihead_attention',
-            hidden_dim=64,
+            hidden_dim=256,
             num_layers=3,
             num_heads=16,
 
@@ -40,6 +40,7 @@ class MultiHeadAttention(BaseProteinModel):
         # self.bos_vector = nn.Parameter(torch.randn(d))
         # self.eos_vector = nn.Parameter(torch.randn(d))
 
+        self.node_proj = nn.LazyLinear(d)
         self.fc1 = nn.LazyLinear(d)
         self.fc2 = nn.Linear(d, num_classes)
 
@@ -57,9 +58,11 @@ class MultiHeadAttention(BaseProteinModel):
 
         #just apply multihead attention to the sequences
         x = graphs.x
+        x = self.node_proj(x)
         x, _ = self.attention(x, x, x)
 
         #MLP to produce output
+
         x = self.fc1(x)
         x = self.relu(x)
         x = self.dropout(x)
