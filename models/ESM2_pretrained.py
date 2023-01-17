@@ -41,7 +41,8 @@ class ESM2Pretrained(BaseProteinModel):
         # Pad sequences
         idx_n = 0
         x, attn_mask = [], []
-        max_len = max([len(s) for s in sequences])
+        lengths = torch.tensor([len(s) for s in sequences])
+        max_len = lengths.max().item()
         for acid_ids in sequences:
             seq = torch.tensor([self.myId2EsmId[i.item()] for i in acid_ids], device=self.device, dtype=torch.long)
             idx_n += seq.shape[0]
@@ -59,5 +60,11 @@ class ESM2Pretrained(BaseProteinModel):
         # Get embeddings
         self.result = self.esm2_model(input_ids=x, attention_mask=attn_mask, output_hidden_states=True)
 
-        x = torch.cat(self.result.hidden_states[-self.config.num_layers+1:], dim=-1)[:, 1:]
+        x = torch.cat(self.result.hidden_states[-self.config.num_layers+1:], dim=-1)
+
+        # hack: replacing first and last embeddings with the embeddings of <cls> and <eos>
+        x[:, 1] = x[:, 0]
+        x[torch.arange(x.shape[0]), lengths] = x[torch.arange(x.shape[0]), lengths+1]
+
+        x = x[:, 1:]  # remove <cls> token
         return x
