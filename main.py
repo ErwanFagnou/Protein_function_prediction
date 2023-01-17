@@ -33,7 +33,7 @@ def get_pretrained_encoder():
     #     num_node_features=ProteinDataset.NUM_NODE_FEATURES,
     #     num_classes=ProteinDataset.NUM_CLASSES,
     # )
-    # return ESM2Pretrained(ProteinDataset.NUM_NODE_FEATURES, ProteinDataset.NUM_CLASSES)
+    return ESM2Pretrained(ProteinDataset.NUM_NODE_FEATURES, ProteinDataset.NUM_CLASSES)
 
 
 def get_model(num_node_features):
