@@ -29,16 +29,16 @@ class GNN(BaseProteinModel):
         super(GNN, self).__init__()
 
         self.config = ConfigDict(
-            name='ESM2+GNN_16-64D',
+            name='ESM2+GNN_16-32D_1L',
             epochs=400,
             batch_size=64,
             num_validation_samples=500,  # there are 4888 training samples, so 500 validation samples is 10%
             optimizer=torch.optim.Adam,
             optimizer_kwargs=dict(lr=1e-3),  # , weight_decay=1e-5),
-            hidden_dim=64,
+            hidden_dim=32,
             embedding_dim=16,
             dropout=0.2,
-            num_layers=2,
+            num_layers=1,
             # lr_scheduler=torch.optim.lr_scheduler.CosineAnnealingLR,
             # lr_scheduler_kwargs=dict(T_max=200, eta_min=1e-5),
             lr_scheduler=torch.optim.lr_scheduler.ExponentialLR,
