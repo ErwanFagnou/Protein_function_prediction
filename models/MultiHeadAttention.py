@@ -44,15 +44,15 @@ class MultiHeadAttention(BaseProteinModel):
         # self.aggregator = aggr.MeanAggregation()
 
         self.queries = torch.randn(self.config.num_queries, d)
-        self.device = None
+        self.dev = None
 
     def forward(self, sequences, graphs, return_embeddings=True, random_mask=False):
         node_features = graphs.x
         node_features = self.node_proj(node_features)
 
-        if not self.device:
-            self.device = node_features.device
-            self.queries = self.queries.to(self.device) 
+        if not self.dev:
+            self.dev = node_features.device
+            self.queries = self.queries.to(self.dev) 
         # Pad sequences
         idx_n = 0
         x, attn_mask = [], []
