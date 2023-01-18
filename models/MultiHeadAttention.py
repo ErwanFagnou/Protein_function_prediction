@@ -43,7 +43,7 @@ class MultiHeadAttention(BaseProteinModel):
         self.attention = nn.MultiheadAttention(embed_dim=d, num_heads=self.config.num_heads, dropout=self.config.dropout, batch_first=True)
         # self.aggregator = aggr.MeanAggregation()
 
-        self.queries = torch.randn(self.config.num_queries, d)
+        self.queries = torch.randn(d, self.config.num_queries)
         self.queries = torch.linalg.qr(self.queries)[0]
 
     def forward(self, sequences, graphs, return_embeddings=True, random_mask=False):
