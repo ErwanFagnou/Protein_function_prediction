@@ -50,8 +50,8 @@ class MultiHeadAttention(BaseProteinModel):
         # Pad sequences
         idx_n = 0
         x, attn_mask = [], []
-        lengths = [len(s) for s in sequences]
-        max_len = max(lengths)
+        lengths = [len(s)-1 for s in sequences]
+        max_len = max(lengths)+1
         for acid_ids in sequences:
             seq = node_features[idx_n:idx_n + len(acid_ids)]
             idx_n += seq.shape[0]
@@ -74,7 +74,7 @@ class MultiHeadAttention(BaseProteinModel):
         #query = x
 
         #query two embeddings : first and last of each sentence, given that the sentences are padded
-        query = torch.cat([x[:, 0, :].unsqueeze(1), x[:, lengths-1, :].unsqueeze(1)], dim=1)
+        query = torch.cat([x[:, 0, :].unsqueeze(1), x[:, lengths, :].unsqueeze(1)], dim=1)
 
         # just apply multihead attention to the sequences, to produce a single vector for each sequence
         x, _ = self.attention(query, x, x, key_padding_mask=attn_mask)  # (batch_size, max_len, d)
