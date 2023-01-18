@@ -24,7 +24,7 @@ class MultiHeadAttention(BaseProteinModel):
             dropout=0.2,
 
             epochs=200,
-            batch_size=2,
+            batch_size=64,
             num_validation_samples=100,
             optimizer=torch.optim.Adam,
             optimizer_kwargs=dict(lr=1e-3),
