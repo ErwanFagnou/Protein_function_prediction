@@ -32,7 +32,7 @@ class MultiHeadAttention(BaseProteinModel):
             name='ESM2_35M+MHA(d=128,h=10)+query=random+10queries+dropout=0.5+PCA+lastHidden',
             hidden_dim=128,
             num_layers=1,
-            num_heads=10,
+            num_heads=16,
 
             dropout=0.5,
             num_queries=10,
