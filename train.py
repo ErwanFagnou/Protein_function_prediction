@@ -26,7 +26,7 @@ def train(model, device, pretrained_seq_encoder=None, do_train=True):
     if not do_train:
         return protein_dataset
 
-    wandb_logger = WandbLogger(project="ALTeGraD Kaggle challenge", entity="efagnou", name=config.name, group=model.experiment_name,
+    wandb_logger = WandbLogger(project="ALTeGraD Kaggle challenge", entity="erwan-denis", name=config.name, group=model.experiment_name,
                                tags=['valid'])
     wandb_logger.log_hyperparams(config)
     if pretrained_seq_encoder is not None:
