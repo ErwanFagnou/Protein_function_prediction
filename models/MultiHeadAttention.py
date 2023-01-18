@@ -69,7 +69,10 @@ class MultiHeadAttention(BaseProteinModel):
         #query = x[:, 0, :].unsqueeze(1)
 
         #query a constant embedding
-        query = torch.ones(x.shape[0], 1, x.shape[2], device=x.device)
+        query = torch.zeros(x.shape[0], 1, x.shape[2], device=x.device)
+
+        #query all the embeddings
+        query = x
 
         # just apply multihead attention to the sequences, to produce a single vector for each sequence
         x, _ = self.attention(query, x, x, key_padding_mask=attn_mask)  # (batch_size, max_len, d)
