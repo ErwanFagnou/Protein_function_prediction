@@ -18,7 +18,7 @@ class MultiHeadAttention(BaseProteinModel):
             num_layers=1,
             num_heads=8,
 
-            dropout=0.2,
+            dropout=0.5,
 
             epochs=200,
             batch_size=64,
