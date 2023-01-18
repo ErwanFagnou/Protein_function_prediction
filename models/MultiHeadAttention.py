@@ -73,8 +73,8 @@ class MultiHeadAttention(BaseProteinModel):
         #query all the embeddings
         #query = x
 
-        #query two embeddings : first and last of each sentence, given that the sentences are padded
-        query = torch.cat([x[:, 0, :].unsqueeze(1), x[:, lengths, :].unsqueeze(1)], dim=1)
+        #get all embeddings at index len(seq)-1 and the embedding of the token cls
+        query = torch.cat([x[torch.arange(x.shape[0]), lengths, :].unsqueeze(1), x[:, 0, :].unsqueeze(1)], dim=1)
 
         # just apply multihead attention to the sequences, to produce a single vector for each sequence
         x, _ = self.attention(query, x, x, key_padding_mask=attn_mask)  # (batch_size, max_len, d)
