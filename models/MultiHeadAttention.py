@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from torch_geometric.nn import aggr
 
 from dataset import ProteinDataset
 from models.BaseProteinModel import BaseProteinModel, ConfigDict
@@ -48,6 +49,7 @@ class MultiHeadAttention(BaseProteinModel):
         self.dropout = nn.Dropout(self.config.dropout)
 
         self.attention = nn.MultiheadAttention(embed_dim=d, num_heads=self.config.num_heads, dropout=self.config.dropout)
+        self.aggregator = aggr.MeanAggregation()
 
     def forward(self, sequences, graphs, return_embeddings=True, random_mask=False):
 
@@ -60,6 +62,7 @@ class MultiHeadAttention(BaseProteinModel):
         x = graphs.x
         x = self.node_proj(x)
         x, _ = self.attention(x, x, x)
+        x = self.aggregator(x, graphs.batch)
 
         #MLP to produce output
 
