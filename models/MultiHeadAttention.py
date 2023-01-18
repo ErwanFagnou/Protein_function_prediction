@@ -46,11 +46,6 @@ class MultiHeadAttention(BaseProteinModel):
         self.queries = torch.randn(self.config.num_queries, d)
         self.queries = torch.linalg.qr(self.queries)[0]
 
-        #get a batch of queries, with the same query for each sequence in the batch
-        self.queries = self.queries.unsqueeze(0)
-        self.queries = self.queries.repeat(self.config.batch_size, 1, 1)
-
-
     def forward(self, sequences, graphs, return_embeddings=True, random_mask=False):
         node_features = graphs.x
         node_features = self.node_proj(node_features)
@@ -84,8 +79,11 @@ class MultiHeadAttention(BaseProteinModel):
         #get all embeddings at index len(seq)-1 and the embedding of the token cls
         #query = torch.cat([x[torch.arange(x.shape[0]), lengths, :].unsqueeze(1), x[:, 0, :].unsqueeze(1)], dim=1)
 
+        #get a batch of queries, full of self.queries
+        query = self.queries.repeat(x.shape[0], 1, 1)
+
         # just apply multihead attention to the sequences, to produce a single vector for each sequence
-        x, _ = self.attention(self.queries, x, x, key_padding_mask=attn_mask)  # (batch_size, max_len, d)
+        x, _ = self.attention(query, x, x, key_padding_mask=attn_mask)  # (batch_size, max_len, d)
 
         #concatenate the final vectors
         x = x.reshape(x.shape[0], -1)
