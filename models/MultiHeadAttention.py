@@ -72,7 +72,6 @@ class MultiHeadAttention(BaseProteinModel):
         # x = self.aggregator(x, graphs.batch)
 
         # MLP to produce output
-
         x = self.fc1(x)
         x = self.relu(x)
         x = self.dropout(x)
