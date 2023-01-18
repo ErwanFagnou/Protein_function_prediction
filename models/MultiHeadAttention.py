@@ -13,13 +13,13 @@ class MultiHeadAttention(BaseProteinModel):
         super(MultiHeadAttention, self).__init__()
 
         self.config = ConfigDict(
-            name='ESM2_35M+MHA(d=128,h=8)+query=constant)',
-            hidden_dim=256,
+            name='ESM2_35M+MHA(d=128,h=4)+query=random+10queries+dropuot=0.5',
+            hidden_dim=128,
             num_layers=1,
-            num_heads=8,
+            num_heads=4,
 
             dropout=0.5,
-
+            num_queries=10,
             epochs=200,
             batch_size=64,
             num_validation_samples=500,
@@ -42,6 +42,13 @@ class MultiHeadAttention(BaseProteinModel):
 
         self.attention = nn.MultiheadAttention(embed_dim=d, num_heads=self.config.num_heads, dropout=self.config.dropout, batch_first=True)
         # self.aggregator = aggr.MeanAggregation()
+
+        self.queries = torch.randn(self.config.num_queries, d)
+        self.queries = torch.linalg.qr(self.queries)[0]
+
+        #get a batch of queries, with the same query for each sequence in the batch
+        self.queries = self.queries.repeat(self.config.batch_size, 1, 1)
+
 
     def forward(self, sequences, graphs, return_embeddings=True, random_mask=False):
         node_features = graphs.x
@@ -77,7 +84,7 @@ class MultiHeadAttention(BaseProteinModel):
         #query = torch.cat([x[torch.arange(x.shape[0]), lengths, :].unsqueeze(1), x[:, 0, :].unsqueeze(1)], dim=1)
 
         # just apply multihead attention to the sequences, to produce a single vector for each sequence
-        x, _ = self.attention(query, x, x, key_padding_mask=attn_mask)  # (batch_size, max_len, d)
+        x, _ = self.attention(self.queries, x, x, key_padding_mask=attn_mask)  # (batch_size, max_len, d)
 
         #concatenate the final vectors
         x = x.reshape(x.shape[0], -1)
