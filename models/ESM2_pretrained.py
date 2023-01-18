@@ -19,8 +19,8 @@ class ESM2Pretrained(BaseProteinModel):
             num_validation_samples=0,
         )
 
-        self.esm2_model = EsmModel.from_pretrained("facebook/esm2_t6_8M_UR50D")
-        #self.esm2_model = EsmModel.from_pretrained("facebook/esm2_t33_650M_UR50D")
+        #self.esm2_model = EsmModel.from_pretrained("facebook/esm2_t6_8M_UR50D")
+        self.esm2_model = EsmModel.from_pretrained("facebook/esm2_t33_650M_UR50D")
         #self.esm2_model = EsmModel.from_pretrained("facebook/esm2_t12_35M_UR50D")
         for param in self.esm2_model.parameters():
             param.requires_grad = False
