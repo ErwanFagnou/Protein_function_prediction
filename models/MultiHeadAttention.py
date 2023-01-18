@@ -7,7 +7,7 @@ from models.BaseProteinModel import BaseProteinModel, ConfigDict
 
 
 class MultiHeadAttention(BaseProteinModel):
-    CREATE_SUBMISSION = False
+    CREATE_SUBMISSION = True
     experiment_name = 'masked_sequence_prediction'
 
     def __init__(self, num_node_features, num_edge_features, num_classes):
