@@ -43,7 +43,7 @@ class MultiHeadAttention(BaseProteinModel):
         self.attention = nn.MultiheadAttention(embed_dim=d, num_heads=self.config.num_heads, dropout=self.config.dropout, batch_first=True)
         # self.aggregator = aggr.MeanAggregation()
 
-        self.queries = torch.randn(self.config.num_queries, d)
+        self.queries = torch.randn(self.config.num_queries, d).to(ProteinDataset.DEVICE)
         #self.queries = torch.linalg.qr(self.queries)[0]
 
     def forward(self, sequences, graphs, return_embeddings=True, random_mask=False):
@@ -67,7 +67,7 @@ class MultiHeadAttention(BaseProteinModel):
         attn_mask = torch.stack(attn_mask, dim=0)  # (batch_size, max_len)
 
         # Just one query (the number of output vectors is equal to the number of queries)
-        query = torch.zeros(x.shape[0], 1, x.shape[2], device=x.device)  # constant vector, but can also be a function of the node features
+        #query = torch.zeros(x.shape[0], 1, x.shape[2], device=x.device)  # constant vector, but can also be a function of the node features
 
         #query the embedding of the token cls
         #query = x[:, 0, :].unsqueeze(1)
