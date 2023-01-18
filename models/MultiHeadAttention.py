@@ -47,7 +47,7 @@ class MultiHeadAttention(BaseProteinModel):
         self.queries = torch.linalg.qr(self.queries)[0]
 
         #get a batch of queries, with the same query for each sequence in the batch
-        self.queries = self.queries.repeat(self.config.batch_size, 1, 1)
+        self.queries = self.queries.repeat(self.config.batch_size, 1, 1).unsqueeze(1)
 
 
     def forward(self, sequences, graphs, return_embeddings=True, random_mask=False):
