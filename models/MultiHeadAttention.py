@@ -48,7 +48,7 @@ class MultiHeadAttention(BaseProteinModel):
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(self.config.dropout)
 
-        self.attention = nn.MultiheadAttention(embed_dim=d, num_heads=self.config.num_heads, dropout=self.config.dropout)
+        self.attention = nn.MultiheadAttention(embed_dim=d, num_heads=self.config.num_heads, dropout=self.config.dropout, batch_first=True)
         self.aggregator = aggr.MeanAggregation()
 
     def forward(self, sequences, graphs, return_embeddings=True, random_mask=False):
@@ -59,7 +59,7 @@ class MultiHeadAttention(BaseProteinModel):
         #batch_size, seq_len, d = sequences.shape
 
         #just apply multihead attention to the sequences
-        x = graphs.x
+        x = sequences
         x = self.node_proj(x)
         #x, _ = self.attention(x, x, x)
         x = self.aggregator(x, graphs.batch)
