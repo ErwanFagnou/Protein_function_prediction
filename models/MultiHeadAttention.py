@@ -13,7 +13,7 @@ class MultiHeadAttention(BaseProteinModel):
         super(MultiHeadAttention, self).__init__()
 
         self.config = ConfigDict(
-            name='ESM2_35M+MHA(d=256,h=8)+query=(cls, eos)',
+            name='ESM2_35M+MHA(d=128,h=8)+query=constant)',
             hidden_dim=256,
             num_layers=1,
             num_heads=8,
@@ -64,7 +64,7 @@ class MultiHeadAttention(BaseProteinModel):
         attn_mask = torch.stack(attn_mask, dim=0)  # (batch_size, max_len)
 
         # Just one query (the number of output vectors is equal to the number of queries)
-        #query = torch.zeros(x.shape[0], 1, x.shape[2], device=x.device)  # constant vector, but can also be a function of the node features
+        query = torch.zeros(x.shape[0], 1, x.shape[2], device=x.device)  # constant vector, but can also be a function of the node features
 
         #query the embedding of the token cls
         #query = x[:, 0, :].unsqueeze(1)
@@ -74,7 +74,7 @@ class MultiHeadAttention(BaseProteinModel):
         #query = x
 
         #get all embeddings at index len(seq)-1 and the embedding of the token cls
-        query = torch.cat([x[torch.arange(x.shape[0]), lengths, :].unsqueeze(1), x[:, 0, :].unsqueeze(1)], dim=1)
+        #query = torch.cat([x[torch.arange(x.shape[0]), lengths, :].unsqueeze(1), x[:, 0, :].unsqueeze(1)], dim=1)
 
         # just apply multihead attention to the sequences, to produce a single vector for each sequence
         x, _ = self.attention(query, x, x, key_padding_mask=attn_mask)  # (batch_size, max_len, d)
