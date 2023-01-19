@@ -30,7 +30,7 @@ class MultiHeadAttention(BaseProteinModel):
         super(MultiHeadAttention, self).__init__()
 
         self.config = ConfigDict(
-            name='ESM2_150M+MHA(d=128,h=4)+query=random+10queries+dropout=0.5+labelSmoothing=0.1',
+            name='ESM2_150M+MHA(d=128,h=4)+query=random+10queries+dropout=0.5+labelSmoothing=0.1+middleLayer',
             hidden_dim=128,
             num_layers=1,
             num_heads=4,

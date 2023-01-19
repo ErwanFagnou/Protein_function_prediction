@@ -15,7 +15,7 @@ class ESM2Pretrained(BaseProteinModel):
         self.config = ConfigDict(
             name='EMS2_pretrained',
 
-            batch_size=8,
+            batch_size=2,
             num_validation_samples=0,
         )
 
@@ -64,10 +64,13 @@ class ESM2Pretrained(BaseProteinModel):
         self.result = self.esm2_model(input_ids=x, attention_mask=attn_mask, output_hidden_states=True)
 
         # all hidden states
-        x = torch.cat(self.result.hidden_states[-self.config.num_layers+1:], dim=-1)
+        # x = torch.cat(self.result.hidden_states[-self.config.num_layers+1:], dim=-1)
 
         # trying to do with only the last layer
         # x = self.result.hidden_states[-1]
+
+        # the layer in the middle
+        x = self.result.hidden_states[self.result.hidden_states.shape[0] // 2]
 
         # hack: replacing first and last embeddings with the embeddings of <cls> and <eos>
         x[:, 1] = x[:, 0]
