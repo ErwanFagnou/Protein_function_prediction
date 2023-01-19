@@ -63,7 +63,7 @@ class BaseProteinModel(ABC, pl.LightningModule):
 
         # replace with label smoothing
         if self.LABEL_SMOOTHING > 0:
-            loss = nn.CrossEntropyLoss(label_smoothing=0.1)(logits, labels)
+            loss = nn.CrossEntropyLoss(label_smoothing=self.LABEL_SMOOTHING)(logits, labels)
 
         return loss
 
