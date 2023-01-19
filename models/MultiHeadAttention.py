@@ -30,8 +30,8 @@ class MultiHeadAttention(BaseProteinModel):
         super(MultiHeadAttention, self).__init__()
 
         self.config = ConfigDict(
-            name='ESM2_35M+MHA(d=128,h=10)+query=random+10queries+dropout=0.5+PCA+lastHidden',
-            hidden_dim=128,
+            name='ESM2_35M+MHA(d=32,h=16)+query=random+10queries+dropout=0.5+labelSmoothing=0.1',
+            hidden_dim=32,
             num_layers=1,
             num_heads=16,
 
@@ -45,7 +45,7 @@ class MultiHeadAttention(BaseProteinModel):
             # lr_scheduler=torch.optim.lr_scheduler.CosineAnnealingLR,
             # lr_scheduler_kwargs=dict(T_max=200, eta_min=1e-5),
             lr_scheduler=torch.optim.lr_scheduler.ExponentialLR,
-            lr_scheduler_kwargs=dict(gamma=pow(1e-4, 1/200)),
+            lr_scheduler_kwargs=dict(gamma=pow(1e-2, 1/200)),
         )
 
         d = self.config.hidden_dim
