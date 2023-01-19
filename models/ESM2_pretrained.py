@@ -70,7 +70,10 @@ class ESM2Pretrained(BaseProteinModel):
         # x = self.result.hidden_states[-1]
 
         # the layer in the middle
-        x = self.result.hidden_states[len(self.result.hidden_states) // 2]
+        # x = self.result.hidden_states[len(self.result.hidden_states) // 2]
+
+        # one layer every 5
+        x = self.result.hidden_states[3::5]
 
         # hack: replacing first and last embeddings with the embeddings of <cls> and <eos>
         x[:, 1] = x[:, 0]
