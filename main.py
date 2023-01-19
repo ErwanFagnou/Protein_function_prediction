@@ -60,7 +60,8 @@ def get_model(num_node_features):
 
 
 if __name__ == '__main__':
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device_id = 1
+    device = torch.device(f"cuda:{device_id}" if torch.cuda.is_available() else "cpu")
 
     # Create models (pretrained encoder and classification model)
     pretrained_seq_encoder = get_pretrained_encoder()  # Pretrained encoder
@@ -69,7 +70,7 @@ if __name__ == '__main__':
     model = get_model(num_node_features)  # Classification model
 
     # Get dataset and train
-    protein_dataset = train(model, device, do_train=TRAIN_MODEL, pretrained_seq_encoder=pretrained_seq_encoder)
+    protein_dataset = train(model, device, device_id, do_train=TRAIN_MODEL, pretrained_seq_encoder=pretrained_seq_encoder)
 
     # Save model
     if TRAIN_MODEL:

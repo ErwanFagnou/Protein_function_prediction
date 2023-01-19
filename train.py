@@ -7,7 +7,7 @@ from pytorch_lightning.loggers import WandbLogger
 from dataset import ProteinDataset
 
 
-def train(model, device, pretrained_seq_encoder=None, do_train=True):
+def train(model, device, device_id, pretrained_seq_encoder=None, do_train=True):
     config = model.config
 
     model = model.to(device)
@@ -50,7 +50,7 @@ def train(model, device, pretrained_seq_encoder=None, do_train=True):
         trainer_kwargs['accelerator'] = 'gpu'
         # trainer_kwargs['devices'] = [max(range(torch.cuda.device_count()),
         #                                  key=lambda i: torch.cuda.get_device_properties(i).total_memory)]
-        trainer_kwargs['devices'] = [2]
+        trainer_kwargs['devices'] = [device_id]
 
     trainer = Trainer(
         max_epochs=config.epochs,
