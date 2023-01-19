@@ -12,6 +12,7 @@ class BaseProteinModel(ABC, pl.LightningModule):
     CREATE_SUBMISSION = True
     experiment_name = 'protein_classification'
     PCA_DIM = -1  # no PCA
+    LABEL_SMOOTHING = 0.0
 
     def __init__(self):
         super(BaseProteinModel, self).__init__()
@@ -59,6 +60,11 @@ class BaseProteinModel(ABC, pl.LightningModule):
             self.log(log_prefix + 'acc', acc, on_epoch=True, batch_size=labels.shape[0], prog_bar=prog_bar)
 
             self.log(log_prefix + 'loss', loss, on_epoch=True, batch_size=labels.shape[0], prog_bar=prog_bar)
+
+        # replace with label smoothing
+        if self.LABEL_SMOOTHING > 0:
+            loss = nn.CrossEntropyLoss(label_smoothing=0.1)(logits, labels)
+
         return loss
 
     def validation_step(self, batch, batch_idx, dataloader_idx=0):

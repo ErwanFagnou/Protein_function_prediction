@@ -9,7 +9,8 @@ from models.BaseProteinModel import BaseProteinModel, ConfigDict
 
 class MultiHeadAttention(BaseProteinModel):
     CREATE_SUBMISSION = True
-    PCA_DIM = 64  # comment or -1 for no PCA
+    # PCA_DIM = 64  # comment or -1 for no PCA
+    LABEL_SMOOTHING = 0.1
 
     # Add node features to the graph
     """transforms = T.Compose([
