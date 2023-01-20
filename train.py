@@ -57,7 +57,7 @@ def train(model, device, device_id, pretrained_seq_encoder=None, do_train=True):
         accumulate_grad_batches=config.accumulate_grad_batches if hasattr(config, 'accumulate_grad_batches') else None,
         #gradient_clip_val=100.0,
         logger=wandb_logger,
-        callbacks=[val_checkpoint_callback, last_checkpoint_callback, scheduler_callback],
+        callbacks=[val_checkpoint_callback, last_checkpoint_callback, scheduler_callback, swa_callback],
         **trainer_kwargs,
     )
     trainer.fit(model, protein_dataset.train_loader, protein_dataset.val_loader)
