@@ -78,8 +78,8 @@ class ESM2Pretrained(BaseProteinModel):
         # one layer every 10  [2, 12, 22, 32]
         # x = torch.cat(self.result.hidden_states[2::10], dim=-1)
 
-        # custom indices
-        ids = [32]  # penultimate
+        # custom indices  [5, 11, 17, 23, 27]
+        ids = [2, 17, 31]
         x = torch.cat([self.result.hidden_states[i] for i in ids], dim=-1)
 
         # hack: replacing first and last embeddings with the embeddings of <cls> and <eos>
