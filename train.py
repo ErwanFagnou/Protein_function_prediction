@@ -50,6 +50,8 @@ def train(model, device, device_id, pretrained_seq_encoder=None, do_train=True):
         #                                  key=lambda i: torch.cuda.get_device_properties(i).total_memory)]
         trainer_kwargs['devices'] = [device_id]
 
+    swa_callback = pl.callbacks.StochasticWeightAveraging(swa_epoch_start=15, swa_lrs=5e-4)
+
     trainer = Trainer(
         max_epochs=config.epochs,
         accumulate_grad_batches=config.accumulate_grad_batches if hasattr(config, 'accumulate_grad_batches') else None,
