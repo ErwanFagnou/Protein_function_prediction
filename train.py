@@ -7,22 +7,8 @@ from pytorch_lightning.loggers import WandbLogger
 from dataset import ProteinDataset
 
 
-def train(model, device, device_id, pretrained_seq_encoder=None, do_train=True):
+def train(model, protein_dataset, device, device_id, pretrained_seq_encoder=None):
     config = model.config
-
-    if pretrained_seq_encoder is not None:
-        print("Pretrained sequence encoder:", pretrained_seq_encoder)
-
-    protein_dataset = ProteinDataset(
-        batch_size=config.batch_size,
-        num_validation_samples=config.num_validation_samples,
-        pretrained_seq_encoder=pretrained_seq_encoder,
-        transforms=model.transforms if hasattr(model, 'transforms') else None,
-        pca_dim=model.PCA_DIM,
-    )
-
-    if not do_train:
-        return protein_dataset
 
     wandb_logger = WandbLogger(project="ALTeGraD Kaggle challenge", entity="erwan-denis", name=config.name, group=model.experiment_name,
                                tags=['valid'])
@@ -62,4 +48,4 @@ def train(model, device, device_id, pretrained_seq_encoder=None, do_train=True):
     )
     trainer.fit(model, protein_dataset.train_loader, protein_dataset.val_loader)
 
-    return protein_dataset
+    wandb_logger.experiment.finish()

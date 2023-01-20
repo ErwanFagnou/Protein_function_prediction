@@ -67,7 +67,7 @@ class MultiHeadAttention(BaseProteinModel):
         node_features = graphs.x
         node_features = self.node_proj(node_features)
 
-        if not self.dev:
+        if self.queries.device != self.dev:
             self.dev = node_features.device
             self.queries = self.queries.to(self.dev) 
         # Pad sequences

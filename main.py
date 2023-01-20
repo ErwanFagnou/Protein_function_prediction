@@ -65,17 +65,27 @@ if __name__ == '__main__':
 
     # Create models (pretrained encoder and classification model)
     pretrained_seq_encoder = get_pretrained_encoder().to(device)  # Pretrained encoder
+    if pretrained_seq_encoder is not None:
+        print("Pretrained sequence encoder:", pretrained_seq_encoder)
 
     num_node_features = ProteinDataset.NUM_NODE_FEATURES if pretrained_seq_encoder is None else pretrained_seq_encoder.output_dim
     model = get_model(num_node_features)
     # model.load_state_dict(torch.load('trained_models/ESM2_650M+MHA(d=128,h=4)+query=random+20queries+dropout=0.2+labelSmoothing=0.05+1of10layers_23-01-20_02-32-34.pt'))
     model = model.to(device)  # Classification model
 
-    # Get dataset and train
-    protein_dataset = train(model, device, device_id, do_train=TRAIN_MODEL, pretrained_seq_encoder=pretrained_seq_encoder)
+    protein_dataset = ProteinDataset(
+        batch_size=model.config.batch_size,
+        num_validation_samples=model.config.num_validation_samples,
+        pretrained_seq_encoder=pretrained_seq_encoder,
+        transforms=model.transforms if hasattr(model, 'transforms') else None,
+        pca_dim=model.PCA_DIM,
+    )
 
-    # Save model
+    # Train
     if TRAIN_MODEL:
+        train(model, protein_dataset, device, device_id, pretrained_seq_encoder=pretrained_seq_encoder)
+
+        # Save model
         model_path = get_unique_file_path("trained_models", f"{model.config.name}", "pt")
         torch.save(model.state_dict(), model_path)
         print(f"Model saved to {model_path}")
