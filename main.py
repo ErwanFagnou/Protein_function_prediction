@@ -1,8 +1,4 @@
 import torch
-import pytorch_lightning as pl
-from pytorch_lightning import Trainer
-from pytorch_lightning.callbacks import ModelCheckpoint
-from pytorch_lightning.loggers import WandbLogger
 
 from dataset import ProteinDataset
 from models.ESM2_custom import ESM2Custom
@@ -22,6 +18,10 @@ from utils import get_unique_file_path
 
 
 TRAIN_MODEL = True
+NUM_MODELS_TRAIN = 1000
+
+# submissions_dir = "submissions"
+submissions_dir = "submissions/ensemble_final"
 
 
 def get_pretrained_encoder():
@@ -59,27 +59,13 @@ def get_model(num_node_features):
     )
 
 
-if __name__ == '__main__':
-    device_id = 1
-    device = torch.device(f"cuda:{device_id}" if torch.cuda.is_available() else "cpu")
+def main_loop(model_num: int, model=None):
+    print("\n", "#" * 30, f"Model {model_num}", "#" * 30)
 
-    # Create models (pretrained encoder and classification model)
-    pretrained_seq_encoder = get_pretrained_encoder().to(device)  # Pretrained encoder
-    if pretrained_seq_encoder is not None:
-        print("Pretrained sequence encoder:", pretrained_seq_encoder)
+    if model is None:
+        model = get_model(num_node_features).to(device)
+    model.config.name = f'{model_num}_{model.config.name}'
 
-    num_node_features = ProteinDataset.NUM_NODE_FEATURES if pretrained_seq_encoder is None else pretrained_seq_encoder.output_dim
-    model = get_model(num_node_features).to(device)  # Classification model
-
-    protein_dataset = ProteinDataset(
-        batch_size=model.config.batch_size,
-        num_validation_samples=model.config.num_validation_samples,
-        pretrained_seq_encoder=pretrained_seq_encoder,
-        transforms=model.transforms if hasattr(model, 'transforms') else None,
-        pca_dim=model.PCA_DIM,
-    )
-
-    # Train
     if TRAIN_MODEL:
         train(model, protein_dataset, device, device_id, pretrained_seq_encoder=pretrained_seq_encoder)
 
@@ -90,4 +76,29 @@ if __name__ == '__main__':
 
     # Save predictions
     if model.CREATE_SUBMISSION:
-        save_predictions(model, protein_dataset)
+        save_predictions(model, protein_dataset, file_dir=submissions_dir)
+
+
+if __name__ == '__main__':
+    device_id = 1
+    device = torch.device(f"cuda:{device_id}" if torch.cuda.is_available() else "cpu")
+
+    # Create models (pretrained encoder and classification model)
+    pretrained_seq_encoder = get_pretrained_encoder().to(device)  # Pretrained encoder
+    if pretrained_seq_encoder is not None:
+        print("Pretrained sequence encoder:", pretrained_seq_encoder)
+
+    num_node_features = ProteinDataset.NUM_NODE_FEATURES if pretrained_seq_encoder is None else pretrained_seq_encoder.output_dim
+    first_model = get_model(num_node_features).to(device)  # Classification model
+
+    protein_dataset = ProteinDataset(
+        batch_size=first_model.config.batch_size,
+        num_validation_samples=first_model.config.num_validation_samples,
+        pretrained_seq_encoder=pretrained_seq_encoder,
+        transforms=first_model.transforms if hasattr(first_model, 'transforms') else None,
+        pca_dim=first_model.PCA_DIM,
+    )
+
+    # Train models
+    for model_num in range(NUM_MODELS_TRAIN):
+        main_loop(model_num, model=first_model if model_num == 0 else None)
