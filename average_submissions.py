@@ -14,9 +14,8 @@ def load_submission(file_path):
 
 
 submissions = [
-    "submissions/ESM2_8M+MHA(d=128,h=4)+query=random+10queries+dropout=0.5+labelSmoothing=0.1_submission_23-01-19_17-51-31.csv",
-    "submissions/ESM2_8M+MHA(d=256,h=16)+query=random+10queries+dropout=0.5+labelSmoothing=0.2_submission_23-01-19_19-54-22.csv",
-    "submissions/ESM2_8M+MHA(d=128,h=16)+query=random+10queries+dropout=0.5+labelSmoothing=0.1_submission_23-01-19_20-30-41.csv",
+    "submissions/ESM2_150M+MHA(d=128,h=4)+query=random+20queries+dropout=0.2+labelSmoothing=0.05+1of5layers_submission_23-01-19_23-52-34.csv",
+    "submissions/ESM2_150M+MHA(d=128,h=4)+query=random+10queries+dropout=0.2+labelSmoothing=0.05+1of5layers_submission_23-01-19_23-12-36.csv",
 ]
 
 final_submission = {}
