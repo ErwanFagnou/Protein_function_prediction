@@ -10,10 +10,8 @@ from dataset import ProteinDataset
 def train(model, device, device_id, pretrained_seq_encoder=None, do_train=True):
     config = model.config
 
-    model = model.to(device)
     if pretrained_seq_encoder is not None:
         print("Pretrained sequence encoder:", pretrained_seq_encoder)
-        pretrained_seq_encoder = pretrained_seq_encoder.to(device)
 
     protein_dataset = ProteinDataset(
         batch_size=config.batch_size,
