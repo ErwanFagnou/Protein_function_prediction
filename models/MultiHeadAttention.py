@@ -50,8 +50,8 @@ class MultiHeadAttention(BaseProteinModel):
 
         d = self.config.hidden_dim
 
-        self.node_proj = nn.LazyLinear(d)
-        self.fc1 = nn.LazyLinear(d)
+        self.node_proj = nn.Linear(num_node_features, d)
+        self.fc1 = nn.Linear(d * self.config.num_queries, d)
         self.fc2 = nn.Linear(d, num_classes)
 
         self.relu = nn.ReLU()
@@ -103,7 +103,7 @@ class MultiHeadAttention(BaseProteinModel):
         query = self.queries.repeat(x.shape[0], 1, 1)
 
         # just apply multihead attention to the sequences, to produce a single vector for each sequence
-        x, _ = self.attention(query, x, x, key_padding_mask=attn_mask)  # (batch_size, max_len, d)
+        x, _ = self.attention(query, x, x, key_padding_mask=attn_mask)  # (batch_size, num_queries, d)
 
         #concatenate the final vectors
         x = x.reshape(x.shape[0], -1)
