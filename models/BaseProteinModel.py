@@ -1,5 +1,6 @@
 import sys
 from abc import ABC, abstractmethod
+from copy import deepcopy
 
 import pytorch_lightning as pl
 import torch
@@ -85,3 +86,6 @@ class ConfigDict(dict):
     __getattr__ = dict.get
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
+
+    def __deepcopy__(self, memo=None):
+        return ConfigDict(deepcopy(dict(self), memo=memo))
