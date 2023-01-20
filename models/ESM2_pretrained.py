@@ -15,7 +15,7 @@ class ESM2Pretrained(BaseProteinModel):
         self.config = ConfigDict(
             name='EMS2_pretrained',
 
-            batch_size=1,
+            batch_size=4,
             num_validation_samples=0,
         )
 
