@@ -69,9 +69,7 @@ if __name__ == '__main__':
         print("Pretrained sequence encoder:", pretrained_seq_encoder)
 
     num_node_features = ProteinDataset.NUM_NODE_FEATURES if pretrained_seq_encoder is None else pretrained_seq_encoder.output_dim
-    model = get_model(num_node_features)
-    # model.load_state_dict(torch.load('trained_models/ESM2_650M+MHA(d=128,h=4)+query=random+20queries+dropout=0.2+labelSmoothing=0.05+1of10layers_23-01-20_02-32-34.pt'))
-    model = model.to(device)  # Classification model
+    model = get_model(num_node_features).to(device)  # Classification model
 
     protein_dataset = ProteinDataset(
         batch_size=model.config.batch_size,

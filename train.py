@@ -16,18 +16,25 @@ def train(model, protein_dataset, device, device_id, pretrained_seq_encoder=None
     if pretrained_seq_encoder is not None:
         wandb_logger.log_hyperparams(dict(pretrained_seq_encoder_name=pretrained_seq_encoder.config.name))
 
+    scheduler_callback = pl.callbacks.LearningRateMonitor(logging_interval="epoch")
+
+    # swa_callback = pl.callbacks.StochasticWeightAveraging(swa_epoch_start=15, swa_lrs=5e-4, device=device)
+
     save_dir = f"checkpoints/{wandb_logger.name}-{wandb_logger.version}"
-    val_checkpoint_callback = ModelCheckpoint(
-        dirpath=save_dir,
-        monitor="val_loss",
-        filename="{epoch:02d}-{step:05d}-{val_loss:.4f}",
-    )
     last_checkpoint_callback = ModelCheckpoint(
         dirpath=save_dir,
         filename="{epoch:02d}-{step:05d}-last",
     )
 
-    scheduler_callback = pl.callbacks.LearningRateMonitor(logging_interval="epoch")
+    callbacks = [scheduler_callback, last_checkpoint_callback]  # , swa_callback]
+
+    if config.num_validation_samples > 0:
+        val_checkpoint_callback = ModelCheckpoint(
+            dirpath=save_dir,
+            monitor="val_loss",
+            filename="{epoch:02d}-{step:05d}-{val_loss:.4f}",
+        )
+        callbacks.append(val_checkpoint_callback)
 
     trainer_kwargs = {}
     if device.type == 'cuda':
@@ -36,16 +43,14 @@ def train(model, protein_dataset, device, device_id, pretrained_seq_encoder=None
         #                                  key=lambda i: torch.cuda.get_device_properties(i).total_memory)]
         trainer_kwargs['devices'] = [device_id]
 
-    # swa_callback = pl.callbacks.StochasticWeightAveraging(swa_epoch_start=15, swa_lrs=5e-4, device=device)
-
     trainer = Trainer(
         max_epochs=config.epochs,
         accumulate_grad_batches=config.accumulate_grad_batches if hasattr(config, 'accumulate_grad_batches') else None,
         #gradient_clip_val=100.0,
         logger=wandb_logger,
-        callbacks=[val_checkpoint_callback, last_checkpoint_callback, scheduler_callback],  #  , swa_callback],
+        callbacks=callbacks,
         **trainer_kwargs,
     )
     trainer.fit(model, protein_dataset.train_loader, protein_dataset.val_loader)
 
-    wandb_logger.experiment.finish()
+    wandb_logger.experiment.finish(quiet=True)
