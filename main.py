@@ -21,7 +21,7 @@ from utils import get_unique_file_path
 # os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 
 
-TRAIN_MODEL = False
+TRAIN_MODEL = True
 
 
 def get_pretrained_encoder():
@@ -68,7 +68,7 @@ if __name__ == '__main__':
 
     num_node_features = ProteinDataset.NUM_NODE_FEATURES if pretrained_seq_encoder is None else pretrained_seq_encoder.output_dim
     model = get_model(num_node_features)
-    model.load_state_dict(torch.load('trained_models/ESM2_650M+MHA(d=128,h=4)+query=random+20queries+dropout=0.2+labelSmoothing=0.05+1of10layers_23-01-20_02-32-34.pt'))
+    # model.load_state_dict(torch.load('trained_models/ESM2_650M+MHA(d=128,h=4)+query=random+20queries+dropout=0.2+labelSmoothing=0.05+1of10layers_23-01-20_02-32-34.pt'))
     model = model.to(device)  # Classification model
 
     # Get dataset and train
