@@ -28,7 +28,7 @@ class ESM2Pretrained(BaseProteinModel):
 
         self.config.hidden_dim = self.esm2_model.config.hidden_size
         self.config.num_layers = self.esm2_model.config.num_hidden_layers
-        self.output_dim = self.config.hidden_dim * self.config.num_layers
+        self.output_dim = self.config.hidden_dim * 4
 
         vocab = ("<cls>", "<pad>", "<eos>", "<unk>", "L",  "A", "G", "V", "S", "E", "R", "T", "I", "D", "P", "K", "Q",
                  "N", "F", "Y", "M", "H", "W", "C", "X", "B", "U", "Z", "O", ".", "-", "<null_1>", "<mask>")
