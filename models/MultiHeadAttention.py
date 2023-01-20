@@ -41,7 +41,7 @@ class MultiHeadAttention(BaseProteinModel):
             batch_size=64,
             num_validation_samples=500,
             optimizer=torch.optim.Adam,
-            optimizer_kwargs=dict(lr=5e-4),
+            optimizer_kwargs=dict(lr=2e-4),
             # lr_scheduler=torch.optim.lr_scheduler.CosineAnnealingLR,
             # lr_scheduler_kwargs=dict(T_max=200, eta_min=1e-5),
             lr_scheduler=torch.optim.lr_scheduler.ExponentialLR,
