@@ -15,14 +15,14 @@ class ESM2Pretrained(BaseProteinModel):
         self.config = ConfigDict(
             name='EMS2_pretrained',
 
-            batch_size=2,
+            batch_size=1,
             num_validation_samples=0,
         )
 
         # self.esm2_model = EsmModel.from_pretrained("facebook/esm2_t6_8M_UR50D")
         # self.esm2_model = EsmModel.from_pretrained("facebook/esm2_t12_35M_UR50D")
-        self.esm2_model = EsmModel.from_pretrained("facebook/esm2_t30_150M_UR50D")
-        # self.esm2_model = EsmModel.from_pretrained("facebook/esm2_t33_650M_UR50D")
+        # self.esm2_model = EsmModel.from_pretrained("facebook/esm2_t30_150M_UR50D")
+        self.esm2_model = EsmModel.from_pretrained("facebook/esm2_t33_650M_UR50D")
         for param in self.esm2_model.parameters():
             param.requires_grad = False
 
@@ -73,7 +73,10 @@ class ESM2Pretrained(BaseProteinModel):
         # x = self.result.hidden_states[len(self.result.hidden_states) // 2]
 
         # one layer every 5
-        x = torch.cat(self.result.hidden_states[3::5], dim=-1)
+        # x = torch.cat(self.result.hidden_states[3::5], dim=-1)
+
+        # one layer every 10
+        x = torch.cat(self.result.hidden_states[2::10], dim=-1)
 
         # hack: replacing first and last embeddings with the embeddings of <cls> and <eos>
         x[:, 1] = x[:, 0]
