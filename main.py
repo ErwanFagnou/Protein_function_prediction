@@ -18,10 +18,10 @@ from utils import get_unique_file_path
 
 
 TRAIN_MODEL = True
-NUM_MODELS_TRAIN = 1000
+NUM_MODELS_TRAIN = 1
 
-# submissions_dir = "submissions"
-submissions_dir = "submissions/ensemble_final"
+submissions_dir = "submissions"
+# submissions_dir = "submissions/ensemble_final"
 
 
 def get_pretrained_encoder():
@@ -64,7 +64,8 @@ def main_loop(model_num: int, model=None):
 
     if model is None:
         model = get_model(num_node_features).to(device)
-    model.config.name = f'{model_num}_{model.config.name}'
+    if NUM_MODELS_TRAIN > 1:
+        model.config.name = f'{model_num}_{model.config.name}'
 
     if TRAIN_MODEL:
         train(model, protein_dataset, device, device_id, pretrained_seq_encoder=pretrained_seq_encoder)
