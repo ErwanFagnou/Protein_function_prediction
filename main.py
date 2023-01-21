@@ -18,7 +18,7 @@ from utils import get_unique_file_path
 
 
 TRAIN_MODEL = True
-NUM_MODELS_TRAIN = 1
+NUM_MODELS_TRAIN = 1000
 
 submissions_dir = "submissions"
 # submissions_dir = "submissions/ensemble_final"
@@ -62,10 +62,16 @@ def get_model(num_node_features):
 def main_loop(model_num: int, model=None):
     print("\n", "#" * 30, f"Model {model_num}", "#" * 30)
 
+
     if model is None:
         model = get_model(num_node_features).to(device)
     if NUM_MODELS_TRAIN > 1:
         model.config.name = f'{model_num}_{model.config.name}'
+
+    # To load different configs
+    lr = [5e-4, 2e-4, 1e-5, 1e-3][model_num]
+    print(f"lr: {lr}")
+    model.config.optimizer_kwargs['lr'] = lr
 
     if TRAIN_MODEL:
         train(model, protein_dataset, device, device_id, pretrained_seq_encoder=pretrained_seq_encoder)
