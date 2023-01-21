@@ -14,18 +14,18 @@ class MultiHeadAttention(BaseProteinModel):
     LABEL_SMOOTHING = 0.05
 
     # Add node features to the graph
-    transforms = T.Compose([
-        TorsionFeatures(),
-         # AnglesFeatures(),
-        PositionInSequence(),
-        CenterDistance(),
-         # MahalanobisCenterDistance(),
-
-        # T.VirtualNode(),
-        T.LocalDegreeProfile(),
-        # T.GDC(),
-        T.AddLaplacianEigenvectorPE(k=3, attr_name=None, is_undirected=True),
-     ])
+    # transforms = T.Compose([
+    #     TorsionFeatures(),
+    #      # AnglesFeatures(),
+    #     PositionInSequence(),
+    #     CenterDistance(),
+    #      # MahalanobisCenterDistance(),
+    #
+    #     # T.VirtualNode(),
+    #     T.LocalDegreeProfile(),
+    #     # T.GDC(),
+    #     T.AddLaplacianEigenvectorPE(k=3, attr_name=None, is_undirected=True),
+    #  ])
 
     def __init__(self, num_node_features, num_edge_features, num_classes):
         super(MultiHeadAttention, self).__init__()
