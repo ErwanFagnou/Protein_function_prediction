@@ -22,7 +22,8 @@ class ESM2Pretrained(BaseProteinModel):
         # self.esm2_model = EsmModel.from_pretrained("facebook/esm2_t6_8M_UR50D")
         # self.esm2_model = EsmModel.from_pretrained("facebook/esm2_t12_35M_UR50D")
         # self.esm2_model = EsmModel.from_pretrained("facebook/esm2_t30_150M_UR50D")
-        self.esm2_model = EsmModel.from_pretrained("facebook/esm2_t33_650M_UR50D")
+        # self.esm2_model = EsmModel.from_pretrained("facebook/esm2_t33_650M_UR50D")
+        self.esm2_model = EsmModel.from_pretrained("facebook/esm2_t36_3B_UR50D")
         for param in self.esm2_model.parameters():
             param.requires_grad = False
 
@@ -76,7 +77,10 @@ class ESM2Pretrained(BaseProteinModel):
         # x = torch.cat(self.result.hidden_states[3::5], dim=-1)
 
         # one layer every 10  [2, 12, 22, 32]
-        x = torch.cat(self.result.hidden_states[2::10], dim=-1)
+        # x = torch.cat(self.result.hidden_states[2::10], dim=-1)
+
+        # one layer every 11  [2, 13, 24, 35]
+        x = torch.cat(self.result.hidden_states[2::11], dim=-1)
 
         # custom indices  [5, 11, 17, 23, 27]
         # ids = [2, 17, 31]
