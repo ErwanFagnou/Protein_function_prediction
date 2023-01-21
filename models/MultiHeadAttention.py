@@ -4,6 +4,7 @@ from torch_geometric.nn import aggr
 from torch_geometric import transforms as T
 
 from dataset import ProteinDataset
+from features import TorsionFeatures, PositionInSequence, CenterDistance
 from models.BaseProteinModel import BaseProteinModel, ConfigDict
 
 
@@ -13,18 +14,18 @@ class MultiHeadAttention(BaseProteinModel):
     LABEL_SMOOTHING = 0.05
 
     # Add node features to the graph
-    """transforms = T.Compose([
-        T.TorsionFeatures(),
+    transforms = T.Compose([
+        TorsionFeatures(),
          # AnglesFeatures(),
-        T.PositionInSequence(),
-        T.CenterDistance(),
+        PositionInSequence(),
+        CenterDistance(),
          # MahalanobisCenterDistance(),
-    
-        T.VirtualNode(),
+
+        # T.VirtualNode(),
         T.LocalDegreeProfile(),
         # T.GDC(),
         T.AddLaplacianEigenvectorPE(k=3, attr_name=None, is_undirected=True),
-     ])"""
+     ])
 
     def __init__(self, num_node_features, num_edge_features, num_classes):
         super(MultiHeadAttention, self).__init__()
@@ -37,7 +38,7 @@ class MultiHeadAttention(BaseProteinModel):
 
             dropout=0.2,
             num_queries=20,
-            epochs=15,
+            epochs=150,
             batch_size=64,
             num_validation_samples=0,  # 500,
             optimizer=torch.optim.Adam,
@@ -50,7 +51,8 @@ class MultiHeadAttention(BaseProteinModel):
 
         d = self.config.hidden_dim
 
-        self.node_proj = nn.Linear(num_node_features, d)
+        # self.node_proj = nn.Linear(num_node_features, d)
+        self.node_proj = nn.LazyLinear(d)
         self.fc1 = nn.Linear(d * self.config.num_queries, d)
         self.fc2 = nn.Linear(d, num_classes)
 
