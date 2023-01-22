@@ -69,9 +69,13 @@ def main_loop(model_num: int, model=None):
         model.config.name = f'{model_num}_{model.config.name}'
 
     # To load different configs
-    lr = [5e-4, 2e-4, 1e-5, 1e-3][model_num]
+    lr = [1e-4, 2e-4][model_num]
     print(f"lr: {lr}")
     model.config.optimizer_kwargs['lr'] = lr
+    if model_num == 1:
+        model.LABEL_SMOOTHING = 0.1
+    if model_num == 2:
+        model.LABEL_SMOOTHING = 0.02
 
     if TRAIN_MODEL:
         train(model, protein_dataset, device, device_id, pretrained_seq_encoder=pretrained_seq_encoder)
