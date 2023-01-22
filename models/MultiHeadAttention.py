@@ -4,6 +4,7 @@ from torch_geometric.nn import aggr
 from torch_geometric import transforms as T
 
 from dataset import ProteinDataset
+from features import TorsionFeatures, PositionInSequence, CenterDistance
 from models.BaseProteinModel import BaseProteinModel, ConfigDict
 
 
@@ -13,24 +14,24 @@ class MultiHeadAttention(BaseProteinModel):
     LABEL_SMOOTHING = 0.05
 
     # Add node features to the graph
-    """transforms = T.Compose([
-        T.TorsionFeatures(),
-         # AnglesFeatures(),
-        T.PositionInSequence(),
-        T.CenterDistance(),
-         # MahalanobisCenterDistance(),
-    
-        T.VirtualNode(),
-        T.LocalDegreeProfile(),
-        # T.GDC(),
-        T.AddLaplacianEigenvectorPE(k=3, attr_name=None, is_undirected=True),
-     ])"""
+    # transforms = T.Compose([
+    #     TorsionFeatures(),
+    #      # AnglesFeatures(),
+    #     PositionInSequence(),
+    #     CenterDistance(),
+    #      # MahalanobisCenterDistance(),
+    #
+    #     # T.VirtualNode(),
+    #     T.LocalDegreeProfile(),
+    #     # T.GDC(),
+    #     T.AddLaplacianEigenvectorPE(k=3, attr_name=None, is_undirected=True),
+    #  ])
 
     def __init__(self, num_node_features, num_edge_features, num_classes):
         super(MultiHeadAttention, self).__init__()
 
         self.config = ConfigDict(
-            name='fullTrain+ESM2_650M+MHA(d=128,h=4)+query=random+20queries+dropout=0.2+labelSmoothing=0.05+1of10layers',
+            name='ESM2_3B+MHA(d=128,h=4)+query=random+20queries+dropout=0.2+labelSmoothing=0.05+1of11layers',
             hidden_dim=128,
             num_layers=1,
             num_heads=4,
@@ -41,7 +42,7 @@ class MultiHeadAttention(BaseProteinModel):
             batch_size=64,
             num_validation_samples=0,  # 500,
             optimizer=torch.optim.Adam,
-            optimizer_kwargs=dict(lr=5e-4),
+            optimizer_kwargs=dict(lr=7e-5),
             # lr_scheduler=torch.optim.lr_scheduler.CosineAnnealingLR,
             # lr_scheduler_kwargs=dict(T_max=200, eta_min=1e-5),
             lr_scheduler=torch.optim.lr_scheduler.ExponentialLR,
@@ -50,7 +51,8 @@ class MultiHeadAttention(BaseProteinModel):
 
         d = self.config.hidden_dim
 
-        self.node_proj = nn.Linear(num_node_features, d)
+        # self.node_proj = nn.Linear(num_node_features, d)
+        self.node_proj = nn.LazyLinear(d)
         self.fc1 = nn.Linear(d * self.config.num_queries, d)
         self.fc2 = nn.Linear(d, num_classes)
 
