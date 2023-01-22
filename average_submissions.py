@@ -20,8 +20,8 @@ def load_submission(file_path):
 #     "submissions/ESM2_150M+MHA(d=128,h=4)+query=random+10queries+dropout=0.2+labelSmoothing=0.05+1of5layers_submission_23-01-19_23-12-36.csv",
 # ]
 
-# all files in "submissions/ensemble_final"
-submissions = glob.glob("submissions/ensemble_final/*.csv")
+
+submissions = glob.glob("submissions/ensemble_final_2/*.csv")
 
 aggregation = "mean"
 # aggregation = "median"
